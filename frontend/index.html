@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ContextFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f7fa;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .task {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .completed {
+            color: green;
+        }
+
+        .priority {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>ContextFlow</h1>
+    <div class="subtitle">
+        Intelligent Context-to-Workflow Automation
+    </div>
+
+    <div id="tasks"></div>
+
+    <script>
+        fetch("/tasks")
+            .then(response => response.json())
+            .then(data => {
+
+                const container = document.getElementById("tasks");
+
+                data.tasks.forEach(task => {
+
+                    const item = document.createElement("div");
+                    item.className = "task";
+
+                    item.innerHTML = `
+                        <h2>${task.title}</h2>
+
+                        <p>${task.description || ""}</p>
+
+                        <p>
+                            <strong>Deadline:</strong>
+                            ${task.deadline || "Not specified"}
+                        </p>
+
+                        <p>
+                            <strong>Priority:</strong>
+                            <span class="priority">${task.priority}</span>
+                        </p>
+
+                        <p>
+                            <strong>Status:</strong>
+                            <span class="status ${task.status === "COMPLETED" ? "completed" : ""}">
+                                ${task.status}
+                            </span>
+                        </p>
+
+                        <p>
+                            <strong>Source:</strong>
+                            ${task.source || "Unknown"}
+                        </p>
+                    `;
+
+                    container.appendChild(item);
+                });
+            });
+    </script>
+
+</body>
+</html>
