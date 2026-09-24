@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from sqlmodel import Session
+from sqlmodel import Session, select
 from uuid import uuid4
 
 from .models import Task
@@ -31,3 +31,9 @@ def create_task(task: Task):
         "message": "Task created successfully",
         "task": task
     }
+
+@app.get("/tasks")
+def get_tasks():
+    with Session(engine) as session:
+        tasks = session.exec(select(Task)).all()
+    return {"tasks": tasks}
