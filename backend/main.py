@@ -50,3 +50,10 @@ def complete_task(task_id: str):
         session.commit()
         session.refresh(task)
     return {"message": "Task completed successfully", "task": task}
+
+from fastapi.responses import FileResponse
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse("frontend/index.html")
+
