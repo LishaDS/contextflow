@@ -37,3 +37,16 @@ def get_tasks():
     with Session(engine) as session:
         tasks = session.exec(select(Task)).all()
     return {"tasks": tasks}
+
+
+@app.patch("/tasks/{task_id}/complete")
+def complete_task(task_id: str):
+    with Session(engine) as session:
+        task = session.get(Task, task_id)
+        if not task:
+            return {"error": "Task not found"}
+        task.status = "COMPLETED"
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+    return {"message": "Task completed successfully", "task": task}
