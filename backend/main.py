@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from .models import Task
+from uuid import uuid4
 
 app = FastAPI(title="ContextFlow API")
 
@@ -11,6 +12,8 @@ def root():
 
 @app.post("/tasks")
 def create_task(task: Task):
+    task.task_id = f"T-{str(uuid4())[:8].upper()}"
+
     return {
         "message": "Task created successfully",
         "task": task
