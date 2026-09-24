@@ -1,10 +1,9 @@
-from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 from typing import Optional
-from uuid import uuid4
 
 
-class Task(BaseModel):
-    task_id: str = ""
+class Task(SQLModel, table=True):
+    task_id: str = Field(primary_key=True)
     title: str
     description: Optional[str] = None
     deadline: Optional[str] = None
