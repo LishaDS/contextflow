@@ -2,90 +2,413 @@
 <html>
 <head>
     <title>ContextFlow</title>
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f7fa; }
-        h1 { margin-bottom: 5px; }
-        .subtitle { color: #666; margin-bottom: 30px; }
-        form, .task {
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f7fa;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        form,
+        .task {
             background: white;
             padding: 20px;
             margin-bottom: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        input, select, button { padding: 10px; margin: 5px; }
-        button { cursor: pointer; }
-        .completed { color: green; font-weight: bold; }
+
+        input,
+        select,
+        button {
+            padding: 10px;
+            margin: 5px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .completed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .celebration {
+            background: #e8f5e9;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body>
 
-<h1>ContextFlow</h1>
-<div class="subtitle">Intelligent Context-to-Workflow Automation</div>
+    <h1>ContextFlow</h1>
 
-<form id="taskForm">
-    <input id="title" placeholder="Task title" required>
-    <input id="deadline" type="date">
-    <select id="priority">
-        <option value="low">Low</option>
-        <option value="medium" selected>Medium</option>
-        <option value="high">High</option>
-    </select>
-    <input id="source" placeholder="Source">
-    <button type="submit">Create Task</button>
-</form>
+    <div class="subtitle">
+        Intelligent Context-to-Workflow Automation
+    </div>
 
-<div id="tasks"></div>
+    <!-- CREATE TASK FORM -->
 
-<script>
-async function loadTasks() {
-    const response = await fetch("/tasks");
-    const data = await response.json();
-    const container = document.getElementById("tasks");
-    container.innerHTML = "";
+    <form id="taskForm">
 
-    data.tasks.forEach(task => {
-        const item = document.createElement("div");
-        item.className = "task";
+        <input
+            id="title"
+            type="text"
+            placeholder="Task title"
+            required
+        >
 
-        item.innerHTML = `
-            <h2>${task.title}</h2>
-            <p>Deadline: ${task.deadline || "Not specified"}</p>
-            <p>Priority: ${task.priority}</p>
-            <p class="${task.status === "COMPLETED" ? "completed" : ""}">
-                Status: ${task.status}
-            </p>
-            <p>Source: ${task.source || "Unknown"}</p>
-        `;
+        <input
+            id="deadline"
+            type="date"
+        >
 
-        container.appendChild(item);
-    });
-}
+        <select id="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+        </select>
 
-document.getElementById("taskForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+        <input
+            id="source"
+            type="text"
+            placeholder="Source"
+        >
 
-    await fetch("/tasks", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            task_id: "",
-            title: document.getElementById("title").value,
-            description: "Created from ContextFlow dashboard",
-            deadline: document.getElementById("deadline").value || null,
-            priority: document.getElementById("priority").value,
-            status: "READY",
-            source: document.getElementById("source").value || "Manual input",
-            link: null
-        })
-    });
+        <button type="submit">
+            Create Task
+        </button>
 
-    document.getElementById("taskForm").reset();
-    loadTasks();
-});
+    </form>
 
-loadTasks();
-</script>
+    <!-- CELEBRATION MESSAGE -->
+
+    <div id="celebration"></div>
+
+    <!-- TASK LIST -->
+
+    <div id="tasks"></div>
+
+
+    <script>
+
+        // Calculate time remaining until deadline
+
+        function timeRemaining(deadline) {
+
+            if (!deadline) {
+                return "No deadline";
+            }
+
+            const now = new Date();
+
+            const due = new Date(
+                deadline + "T23:59:59"
+            );
+
+            const difference =
+                due - now;
+
+            const hours = Math.ceil(
+                difference /
+                (1000 * 60 * 60)
+            );
+
+            if (hours < 0) {
+                return "Overdue";
+            }
+
+            if (hours < 24) {
+                return hours +
+                    " hours remaining";
+            }
+
+            return Math.ceil(
+                hours / 24
+            ) + " days remaining";
+        }
+
+
+        // Load all tasks from backend
+
+        async function loadTasks() {
+
+            const response =
+                await fetch("/tasks");
+
+            const data =
+                await response.json();
+
+            const taskContainer =
+                document.getElementById("tasks");
+
+            const celebration =
+                document.getElementById(
+                    "celebration"
+                );
+
+            taskContainer.innerHTML = "";
+
+
+            // Check whether every task is completed
+
+            const allCompleted =
+                data.tasks.length > 0 &&
+                data.tasks.every(
+                    task =>
+                        task.status ===
+                        "COMPLETED"
+                );
+
+
+            if (allCompleted) {
+
+                celebration.className =
+                    "celebration";
+
+                celebration.innerHTML = `
+                    <h2>
+                        🎉 All tasks completed!
+                    </h2>
+
+                    <p>
+                        Great work! Your active
+                        workflow is complete.
+                    </p>
+                `;
+
+            } else {
+
+                celebration.className = "";
+
+                celebration.innerHTML = "";
+            }
+
+
+            // Display every task
+
+            data.tasks.forEach(task => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className = "task";
+
+
+                let completeButton = "";
+
+                if (
+                    task.status !==
+                    "COMPLETED"
+                ) {
+
+                    completeButton = `
+                        <button
+                            onclick="completeTask('${task.task_id}')"
+                        >
+                            Mark Complete
+                        </button>
+                    `;
+                }
+
+
+                item.innerHTML = `
+
+                    <h2>
+                        ${task.title}
+                    </h2>
+
+                    <p>
+                        <strong>
+                            Deadline:
+                        </strong>
+
+                        ${
+                            task.deadline ||
+                            "Not specified"
+                        }
+                    </p>
+
+                    <p>
+                        <strong>
+                            ${
+                                timeRemaining(
+                                    task.deadline
+                                )
+                            }
+                        </strong>
+                    </p>
+
+                    <p>
+                        <strong>
+                            Priority:
+                        </strong>
+
+                        ${task.priority}
+                    </p>
+
+                    <p
+                        class="${
+                            task.status ===
+                            "COMPLETED"
+                            ? "completed"
+                            : ""
+                        }"
+                    >
+                        <strong>
+                            Status:
+                        </strong>
+
+                        ${task.status}
+                    </p>
+
+                    <p>
+                        <strong>
+                            Source:
+                        </strong>
+
+                        ${
+                            task.source ||
+                            "Unknown"
+                        }
+                    </p>
+
+                    ${completeButton}
+
+                `;
+
+                taskContainer.appendChild(
+                    item
+                );
+
+            });
+
+        }
+
+
+        // Mark a task as completed
+
+        async function completeTask(taskId) {
+
+            await fetch(
+                `/tasks/${taskId}/complete`,
+                {
+                    method: "PATCH"
+                }
+            );
+
+            await loadTasks();
+        }
+
+
+        // Create a new task
+
+        document
+            .getElementById("taskForm")
+            .addEventListener(
+                "submit",
+                async function(event) {
+
+                    event.preventDefault();
+
+
+                    const title =
+                        document
+                        .getElementById("title")
+                        .value;
+
+                    const deadline =
+                        document
+                        .getElementById("deadline")
+                        .value;
+
+                    const priority =
+                        document
+                        .getElementById("priority")
+                        .value;
+
+                    const source =
+                        document
+                        .getElementById("source")
+                        .value;
+
+
+                    await fetch(
+                        "/tasks",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    task_id: "",
+
+                                    title:
+                                        title,
+
+                                    description:
+                                        "Created from ContextFlow dashboard",
+
+                                    deadline:
+                                        deadline ||
+                                        null,
+
+                                    priority:
+                                        priority,
+
+                                    status:
+                                        "READY",
+
+                                    source:
+                                        source ||
+                                        "Manual input",
+
+                                    link:
+                                        null
+                                })
+                        }
+                    );
+
+
+                    document
+                        .getElementById(
+                            "taskForm"
+                        )
+                        .reset();
+
+
+                    await loadTasks();
+
+                }
+            );
+
+
+        // Load tasks when dashboard opens
+
+        loadTasks();
+
+    </script>
 
 </body>
 </html>
