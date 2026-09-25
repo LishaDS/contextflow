@@ -70,6 +70,9 @@
         Intelligent Context-to-Workflow Automation
     </div>
 
+
+    <!-- CREATE TASK FORM -->
+
     <form id="taskForm">
 
         <input
@@ -85,9 +88,22 @@
         >
 
         <select id="priority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
+
+            <option value="low">
+                Low
+            </option>
+
+            <option
+                value="medium"
+                selected
+            >
+                Medium
+            </option>
+
+            <option value="high">
+                High
+            </option>
+
         </select>
 
         <input
@@ -108,66 +124,131 @@
 
     </form>
 
+
+    <!-- COMPLETION MESSAGE -->
+
     <div id="celebration"></div>
+
+
+    <!-- TASK LIST -->
 
     <div id="tasks"></div>
 
 
     <script>
 
+
+        // =========================================
+        // DEADLINE STATUS
+        // =========================================
+
         function timeRemaining(deadline) {
 
             if (!deadline) {
+
                 return "No deadline";
+
             }
 
+
             const now = new Date();
+
 
             const due = new Date(
                 deadline + "T23:59:59"
             );
 
+
             const difference =
                 due - now;
+
 
             const hours = Math.ceil(
                 difference /
                 (1000 * 60 * 60)
             );
 
+
+            // OVERDUE
+
             if (hours < 0) {
-                return "Overdue";
+
+                return "⚠️ Overdue";
+
             }
+
+
+            // DUE TODAY
 
             if (hours < 24) {
-                return hours +
-                    " hours remaining";
+
+                return "🔴 Due today";
+
             }
 
-            return Math.ceil(
-                hours / 24
-            ) + " days remaining";
+
+            const days =
+                Math.ceil(hours / 24);
+
+
+            // DUE SOON
+
+            if (days <= 2) {
+
+                return (
+                    "🟠 Due soon — " +
+                    days +
+                    " days remaining"
+                );
+
+            }
+
+
+            // NORMAL
+
+            return (
+                "🟢 " +
+                days +
+                " days remaining"
+            );
+
         }
 
 
+
+        // =========================================
+        // LOAD TASKS
+        // =========================================
+
         async function loadTasks() {
+
 
             const response =
                 await fetch("/tasks");
 
+
             const data =
                 await response.json();
 
+
             const taskContainer =
-                document.getElementById("tasks");
+                document.getElementById(
+                    "tasks"
+                );
+
 
             const celebration =
                 document.getElementById(
                     "celebration"
                 );
 
+
             taskContainer.innerHTML = "";
 
+
+            // =====================================
+            // CHECK WHETHER ALL TASKS ARE COMPLETE
+            // =====================================
 
             const allCompleted =
                 data.tasks.length > 0 &&
@@ -180,10 +261,13 @@
 
             if (allCompleted) {
 
+
                 celebration.className =
                     "celebration";
 
+
                 celebration.innerHTML = `
+
                     <h2>
                         🎉 All tasks completed!
                     </h2>
@@ -192,48 +276,86 @@
                         Great work! Your active
                         workflow is complete.
                     </p>
+
                 `;
+
 
             } else {
 
-                celebration.className = "";
 
-                celebration.innerHTML = "";
+                celebration.className =
+                    "";
+
+
+                celebration.innerHTML =
+                    "";
+
             }
 
 
+
+            // =====================================
+            // DISPLAY EACH TASK
+            // =====================================
+
             data.tasks.forEach(task => {
+
 
                 const item =
                     document.createElement(
                         "div"
                     );
 
-                item.className = "task";
+
+                item.className =
+                    "task";
 
 
-                let completeButton = "";
+                // =================================
+                // COMPLETE BUTTON
+                // =================================
+
+                let completeButton =
+                    "";
+
 
                 if (
                     task.status !==
                     "COMPLETED"
                 ) {
 
+
                     completeButton = `
+
                         <button
-                            onclick="completeTask('${task.task_id}')"
+                            onclick="
+                                completeTask(
+                                    '${task.task_id}'
+                                )
+                            "
                         >
                             Mark Complete
                         </button>
+
                     `;
+
                 }
 
 
-                let sourceLink = "";
+
+                // =================================
+                // SOURCE LINK
+                // =================================
+
+                let sourceLink =
+                    "";
+
 
                 if (task.link) {
 
+
                     sourceLink = `
+
                         <br>
 
                         <a
@@ -243,18 +365,27 @@
                         >
                             🔗 Open Source
                         </a>
+
                     `;
 
                 }
 
 
+
+                // =================================
+                // TASK HTML
+                // =================================
+
                 item.innerHTML = `
+
 
                     <h2>
                         ${task.title}
                     </h2>
 
+
                     <p>
+
                         <strong>
                             Deadline:
                         </strong>
@@ -263,25 +394,35 @@
                             task.deadline ||
                             "Not specified"
                         }
+
                     </p>
 
+
                     <p>
+
                         <strong>
+
                             ${
                                 timeRemaining(
                                     task.deadline
                                 )
                             }
+
                         </strong>
+
                     </p>
 
+
                     <p>
+
                         <strong>
                             Priority:
                         </strong>
 
                         ${task.priority}
+
                     </p>
+
 
                     <p
                         class="${
@@ -291,14 +432,18 @@
                             : ""
                         }"
                     >
+
                         <strong>
                             Status:
                         </strong>
 
                         ${task.status}
+
                     </p>
 
+
                     <p>
+
                         <strong>
                             Source:
                         </strong>
@@ -312,31 +457,52 @@
 
                     </p>
 
+
                     ${completeButton}
 
+
                 `;
+
 
                 taskContainer.appendChild(
                     item
                 );
 
+
             });
+
 
         }
 
+
+
+        // =========================================
+        // COMPLETE TASK
+        // =========================================
 
         async function completeTask(taskId) {
 
+
             await fetch(
+
                 `/tasks/${taskId}/complete`,
+
                 {
                     method: "PATCH"
                 }
+
             );
 
+
             await loadTasks();
+
         }
 
+
+
+        // =========================================
+        // CREATE TASK
+        // =========================================
 
         document
             .getElementById("taskForm")
@@ -344,77 +510,125 @@
                 "submit",
                 async function(event) {
 
+
                     event.preventDefault();
+
 
 
                     const title =
                         document
-                        .getElementById("title")
+                        .getElementById(
+                            "title"
+                        )
                         .value;
+
+
 
                     const deadline =
                         document
-                        .getElementById("deadline")
+                        .getElementById(
+                            "deadline"
+                        )
                         .value;
+
+
 
                     const priority =
                         document
-                        .getElementById("priority")
+                        .getElementById(
+                            "priority"
+                        )
                         .value;
+
+
 
                     const source =
                         document
-                        .getElementById("source")
+                        .getElementById(
+                            "source"
+                        )
                         .value;
+
+
 
                     const link =
                         document
-                        .getElementById("link")
+                        .getElementById(
+                            "link"
+                        )
                         .value;
 
 
+
+                    // ============================
+                    // SEND TASK TO BACKEND
+                    // ============================
+
                     await fetch(
+
                         "/tasks",
+
                         {
+
                             method: "POST",
 
+
                             headers: {
+
                                 "Content-Type":
                                     "application/json"
+
                             },
+
 
                             body:
                                 JSON.stringify({
 
-                                    task_id: "",
+                                    task_id:
+                                        "",
+
 
                                     title:
                                         title,
 
+
                                     description:
                                         "Created from ContextFlow dashboard",
+
 
                                     deadline:
                                         deadline ||
                                         null,
 
+
                                     priority:
                                         priority,
 
+
                                     status:
                                         "READY",
+
 
                                     source:
                                         source ||
                                         "Manual input",
 
+
                                     link:
                                         link ||
                                         null
+
                                 })
+
                         }
+
                     );
 
+
+
+                    // ============================
+                    // RESET FORM
+                    // ============================
 
                     document
                         .getElementById(
@@ -423,13 +637,25 @@
                         .reset();
 
 
+
+                    // ============================
+                    // REFRESH TASK LIST
+                    // ============================
+
                     await loadTasks();
+
 
                 }
             );
 
 
+
+        // =========================================
+        // INITIAL PAGE LOAD
+        // =========================================
+
         loadTasks();
+
 
     </script>
 
