@@ -18,6 +18,7 @@
             font-size: 16px;
             border-radius: 8px;
             border: 1px solid #ccc;
+            box-sizing: border-box;
         }
 
         button {
@@ -46,6 +47,23 @@
             margin-top: 10px;
             border-radius: 6px;
         }
+
+        .success {
+            background: #e8f5e9;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .dashboard-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
     </style>
 </head>
 
@@ -59,7 +77,8 @@
 
         <p>
             Paste information here and ContextFlow will
-            identify actionable tasks.
+            identify actionable tasks, deadlines,
+            dependencies and source links.
         </p>
 
         <textarea
@@ -87,11 +106,9 @@
                 .getElementById("context")
                 .value;
 
-
             const result =
                 document
                 .getElementById("result");
-
 
             if (!context.trim()) {
 
@@ -102,107 +119,176 @@
 
             }
 
-
             result.innerHTML =
-                "<p>Analyzing context...</p>";
+                "<div class='result'>" +
+                "<p>🧠 Analyzing context...</p>" +
+                "</div>";
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/analyze-context",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    context: context
+                                })
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (data.error) {
+
+                    result.innerHTML = `
+
+                        <div class="result">
+
+                            <strong>
+                                Error:
+                            </strong>
+
+                            ${data.error}
+
+                        </div>
+
+                    `;
+
+                    return;
+
+                }
 
 
-            const response =
-                await fetch(
-                    "/analyze-context",
-                    {
-                        method: "POST",
+                let html = `
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+                    <div class="success">
 
-                        body:
-                            JSON.stringify({
-                                context: context
-                            })
-                    }
-                );
+                        <h3>
+                            ✅ Tasks created successfully!
+                        </h3>
 
+                        <p>
+                            ContextFlow identified
+                            and saved
+                            ${
+                                data.tasks.length
+                            }
+                            task(s).
+                        </p>
 
-            const data =
-                await response.json();
-
-
-            if (data.error) {
-
-                result.innerHTML = `
-                    <div class="result">
-                        <strong>
-                            Error:
-                        </strong>
-
-                        ${data.error}
                     </div>
+
+                    <div class="result">
+
+                        <h3>
+                            🧠 Extracted Tasks
+                        </h3>
+
                 `;
 
-                return;
 
-            }
+                if (
+                    data.tasks &&
+                    data.tasks.length > 0
+                ) {
 
+                    data.tasks.forEach(
+                        function(task) {
 
-            let html = `
+                            html += `
 
-                <div class="result">
+                                <div class="task">
 
-                    <h3>
-                        🧠 Extracted Tasks
-                    </h3>
+                                    <strong>
+                                        ${task.title}
+                                    </strong>
 
-            `;
+                                    <br>
 
+                                    <small>
+                                        Task ID:
+                                        ${task.task_id}
+                                    </small>
 
-            if (
-                data.tasks &&
-                data.tasks.length > 0
-            ) {
+                                    <br>
 
-                data.tasks.forEach(
-                    function(task) {
+                                    <small>
+                                        Deadline:
+                                        ${
+                                            task.deadline ||
+                                            "Not specified"
+                                        }
+                                    </small>
 
-                        html += `
+                                    <br>
 
-                            <div class="task">
+                                    <small>
+                                        Status:
+                                        ${task.status}
+                                    </small>
 
-                                <strong>
-                                    ${task.title}
-                                </strong>
+                                </div>
 
-                                <br>
+                            `;
 
-                                <small>
-                                    Source:
-                                    ${task.source}
-                                </small>
+                        }
+                    );
 
-                            </div>
+                } else {
 
-                        `;
+                    html += `
+                        <p>
+                            No actionable tasks found.
+                        </p>
+                    `;
 
-                    }
-                );
+                }
 
-            } else {
 
                 html += `
-                    <p>
-                        No actionable tasks found.
-                    </p>
+
+                    </div>
+
+                    <a
+                        class="dashboard-button"
+                        href="/dashboard"
+                    >
+                        📊 Open Dashboard
+                    </a>
+
+                `;
+
+
+                result.innerHTML = html;
+
+            } catch (error) {
+
+                result.innerHTML = `
+
+                    <div class="result">
+
+                        <strong>
+                            Something went wrong.
+                        </strong>
+
+                        <p>
+                            Please try again.
+                        </p>
+
+                    </div>
+
                 `;
 
             }
-
-
-            html += "</div>";
-
-
-            result.innerHTML = html;
 
         }
 
