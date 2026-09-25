@@ -1,0 +1,4 @@
+contextflow.db
+__pycache__/
+*.pyc
+task.status
