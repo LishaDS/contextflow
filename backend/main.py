@@ -110,7 +110,24 @@ def analyze_context(data: dict):
 
     extracted_tasks = []
 
-    for sentence in sentences:
+    # First, find all URLs in the complete context.
+    urls = re.findall(
+        r"https?://[^\s]+",
+        context
+    )
+
+    clean_urls = []
+
+    for url in urls:
+
+        url = url.rstrip(
+            ".,!?;:)"
+        )
+
+        clean_urls.append(url)
+
+    # Find actionable sentences.
+    for index, sentence in enumerate(sentences):
 
         sentence = sentence.strip()
 
@@ -164,9 +181,48 @@ def analyze_context(data: dict):
 
                 deadline = None
 
+        link = None
+
+        # If the task sentence itself contains a URL,
+        # attach that URL.
+        sentence_url = re.search(
+            r"https?://[^\s]+",
+            sentence
+        )
+
+        if sentence_url:
+
+            link = sentence_url.group(0).rstrip(
+                ".,!?;:)"
+            )
+
+        # If no URL is in the task sentence,
+        # look at the following sentence.
+        elif index + 1 < len(sentences):
+
+            next_sentence = sentences[index + 1]
+
+            next_url = re.search(
+                r"https?://[^\s]+",
+                next_sentence
+            )
+
+            if next_url:
+
+                link = next_url.group(0).rstrip(
+                    ".,!?;:)"
+                )
+
+        # If still no URL was found, use the
+        # first URL in the context.
+        if not link and clean_urls:
+
+            link = clean_urls[0]
+
         extracted_tasks.append({
             "title": sentence,
-            "deadline": deadline
+            "deadline": deadline,
+            "link": link
         })
 
     created_tasks = []
@@ -178,14 +234,10 @@ def analyze_context(data: dict):
         for item in extracted_tasks:
 
             title = item["title"]
+
             lower_title = title.lower()
 
             dependency = None
-
-            # Detect simple sequential dependency.
-            # Example:
-            # "After completing the training,
-            # attend the security assessment."
 
             if (
                 previous_task_id
@@ -195,6 +247,7 @@ def analyze_context(data: dict):
                     or "after finishing" in lower_title
                 )
             ):
+
                 dependency = previous_task_id
 
             task = Task(
@@ -216,7 +269,7 @@ def analyze_context(data: dict):
 
                 source="ContextFlow Context Analyzer",
 
-                link=None,
+                link=item["link"],
 
                 depends_on=dependency
             )
