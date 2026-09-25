@@ -50,6 +50,15 @@
             margin-bottom: 20px;
             border-radius: 10px;
         }
+
+        .source-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #eef2ff;
+            border-radius: 6px;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -60,8 +69,6 @@
     <div class="subtitle">
         Intelligent Context-to-Workflow Automation
     </div>
-
-    <!-- CREATE TASK FORM -->
 
     <form id="taskForm">
 
@@ -89,24 +96,24 @@
             placeholder="Source"
         >
 
+        <input
+            id="link"
+            type="url"
+            placeholder="Source link"
+        >
+
         <button type="submit">
             Create Task
         </button>
 
     </form>
 
-    <!-- CELEBRATION MESSAGE -->
-
     <div id="celebration"></div>
-
-    <!-- TASK LIST -->
 
     <div id="tasks"></div>
 
 
     <script>
-
-        // Calculate time remaining until deadline
 
         function timeRemaining(deadline) {
 
@@ -143,8 +150,6 @@
         }
 
 
-        // Load all tasks from backend
-
         async function loadTasks() {
 
             const response =
@@ -163,8 +168,6 @@
 
             taskContainer.innerHTML = "";
 
-
-            // Check whether every task is completed
 
             const allCompleted =
                 data.tasks.length > 0 &&
@@ -199,8 +202,6 @@
             }
 
 
-            // Display every task
-
             data.tasks.forEach(task => {
 
                 const item =
@@ -225,6 +226,25 @@
                             Mark Complete
                         </button>
                     `;
+                }
+
+
+                let sourceLink = "";
+
+                if (task.link) {
+
+                    sourceLink = `
+                        <br>
+
+                        <a
+                            class="source-link"
+                            href="${task.link}"
+                            target="_blank"
+                        >
+                            🔗 Open Source
+                        </a>
+                    `;
+
                 }
 
 
@@ -287,6 +307,9 @@
                             task.source ||
                             "Unknown"
                         }
+
+                        ${sourceLink}
+
                     </p>
 
                     ${completeButton}
@@ -302,8 +325,6 @@
         }
 
 
-        // Mark a task as completed
-
         async function completeTask(taskId) {
 
             await fetch(
@@ -316,8 +337,6 @@
             await loadTasks();
         }
 
-
-        // Create a new task
 
         document
             .getElementById("taskForm")
@@ -346,6 +365,11 @@
                     const source =
                         document
                         .getElementById("source")
+                        .value;
+
+                    const link =
+                        document
+                        .getElementById("link")
                         .value;
 
 
@@ -385,6 +409,7 @@
                                         "Manual input",
 
                                     link:
+                                        link ||
                                         null
                                 })
                         }
@@ -403,8 +428,6 @@
                 }
             );
 
-
-        // Load tasks when dashboard opens
 
         loadTasks();
 
