@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ContextFlow - Context Capture</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f7fa;
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 800px;
+            height: 250px;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 850px;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #eef2ff;
+            border-radius: 8px;
+        }
+
+        .task {
+            background: white;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+
+        <h1>ContextFlow</h1>
+
+        <h2>Context Capture</h2>
+
+        <p>
+            Paste information here and ContextFlow will
+            identify actionable tasks.
+        </p>
+
+        <textarea
+            id="context"
+            placeholder="Paste synthetic context here..."
+        ></textarea>
+
+        <br>
+
+        <button onclick="analyzeContext()">
+            Analyze Context
+        </button>
+
+        <div id="result"></div>
+
+    </div>
+
+
+    <script>
+
+        async function analyzeContext() {
+
+            const context =
+                document
+                .getElementById("context")
+                .value;
+
+
+            const result =
+                document
+                .getElementById("result");
+
+
+            if (!context.trim()) {
+
+                result.innerHTML =
+                    "<p>Please enter some context.</p>";
+
+                return;
+
+            }
+
+
+            result.innerHTML =
+                "<p>Analyzing context...</p>";
+
+
+            const response =
+                await fetch(
+                    "/analyze-context",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                context: context
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.error) {
+
+                result.innerHTML = `
+                    <div class="result">
+                        <strong>
+                            Error:
+                        </strong>
+
+                        ${data.error}
+                    </div>
+                `;
+
+                return;
+
+            }
+
+
+            let html = `
+
+                <div class="result">
+
+                    <h3>
+                        🧠 Extracted Tasks
+                    </h3>
+
+            `;
+
+
+            if (
+                data.tasks &&
+                data.tasks.length > 0
+            ) {
+
+                data.tasks.forEach(
+                    function(task) {
+
+                        html += `
+
+                            <div class="task">
+
+                                <strong>
+                                    ${task.title}
+                                </strong>
+
+                                <br>
+
+                                <small>
+                                    Source:
+                                    ${task.source}
+                                </small>
+
+                            </div>
+
+                        `;
+
+                    }
+                );
+
+            } else {
+
+                html += `
+                    <p>
+                        No actionable tasks found.
+                    </p>
+                `;
+
+            }
+
+
+            html += "</div>";
+
+
+            result.innerHTML = html;
+
+        }
+
+    </script>
+
+</body>
+</html>

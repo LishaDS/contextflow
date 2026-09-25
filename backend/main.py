@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from sqlmodel import Session, select
 from uuid import uuid4
 from fastapi.responses import FileResponse
+import re
 
 from .models import Task
 from .database import create_db_and_tables, engine
@@ -73,9 +74,6 @@ def complete_task(task_id: str):
                 "error": "Task not found"
             }
 
-
-        # Check dependency before completing
-
         if task.depends_on:
 
             dependency = session.get(
@@ -88,11 +86,9 @@ def complete_task(task_id: str):
                 return {
                     "error":
                         "Task is blocked by an incomplete dependency",
-
                     "depends_on":
                         task.depends_on
                 }
-
 
         task.status = "COMPLETED"
 
@@ -108,9 +104,71 @@ def complete_task(task_id: str):
     }
 
 
+@app.post("/analyze-context")
+def analyze_context(data: dict):
+
+    context = data.get("context", "").strip()
+
+    if not context:
+
+        return {
+            "error": "No context provided"
+        }
+
+
+    tasks = []
+
+
+    # Find sentences containing action words
+
+    sentences = re.split(
+        r"(?<=[.!?])\s+",
+        context
+    )
+
+
+    for sentence in sentences:
+
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+
+        if any(
+            word in sentence.lower()
+            for word in [
+                "complete",
+                "attend",
+                "submit",
+                "finish",
+                "review"
+            ]
+        ):
+
+            tasks.append({
+                "title": sentence,
+                "source": "Synthetic context"
+            })
+
+
+    return {
+        "message": "Context analyzed successfully",
+        "tasks": tasks
+    }
+
+
 @app.get("/dashboard")
 def dashboard():
 
     return FileResponse(
         "frontend/index.html"
+    )
+
+
+@app.get("/context")
+def context_page():
+
+    return FileResponse(
+        "frontend/context.html"
     )
