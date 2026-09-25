@@ -115,17 +115,12 @@ def analyze_context(data: dict):
             "error": "No context provided"
         }
 
-
     tasks = []
-
-
-    # Find sentences containing action words
 
     sentences = re.split(
         r"(?<=[.!?])\s+",
         context
     )
-
 
     for sentence in sentences:
 
@@ -134,9 +129,10 @@ def analyze_context(data: dict):
         if not sentence:
             continue
 
+        lower_sentence = sentence.lower()
 
         if any(
-            word in sentence.lower()
+            word in lower_sentence
             for word in [
                 "complete",
                 "attend",
@@ -150,7 +146,6 @@ def analyze_context(data: dict):
                 "title": sentence,
                 "source": "Synthetic context"
             })
-
 
     return {
         "message": "Context analyzed successfully",
