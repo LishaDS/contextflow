@@ -93,6 +93,35 @@ def complete_task(task_id: str):
     }
 
 
+def detect_priority(text):
+
+    text = text.lower()
+
+    high_words = [
+        "urgent",
+        "critical",
+        "immediately",
+        "asap",
+        "high priority",
+        "emergency"
+    ]
+
+    low_words = [
+        "optional",
+        "when possible",
+        "low priority",
+        "whenever possible"
+    ]
+
+    if any(word in text for word in high_words):
+        return "high"
+
+    if any(word in text for word in low_words):
+        return "low"
+
+    return "medium"
+
+
 @app.post("/analyze-context")
 def analyze_context(data: dict):
 
@@ -110,7 +139,6 @@ def analyze_context(data: dict):
 
     extracted_tasks = []
 
-    # First, find all URLs in the complete context.
     urls = re.findall(
         r"https?://[^\s]+",
         context
@@ -119,14 +147,10 @@ def analyze_context(data: dict):
     clean_urls = []
 
     for url in urls:
-
-        url = url.rstrip(
-            ".,!?;:)"
+        clean_urls.append(
+            url.rstrip(".,!?;:)")
         )
 
-        clean_urls.append(url)
-
-    # Find actionable sentences.
     for index, sentence in enumerate(sentences):
 
         sentence = sentence.strip()
@@ -143,7 +167,11 @@ def analyze_context(data: dict):
                 "attend",
                 "submit",
                 "finish",
-                "review"
+                "review",
+                "urgent",
+                "critical",
+                "immediately",
+                "asap"
             ]
         ):
             continue
@@ -163,7 +191,6 @@ def analyze_context(data: dict):
 
             month = date_match.group(1)
             day = int(date_match.group(2))
-
             current_year = datetime.now().year
 
             try:
@@ -178,13 +205,10 @@ def analyze_context(data: dict):
                 )
 
             except ValueError:
-
                 deadline = None
 
         link = None
 
-        # If the task sentence itself contains a URL,
-        # attach that URL.
         sentence_url = re.search(
             r"https?://[^\s]+",
             sentence
@@ -196,8 +220,6 @@ def analyze_context(data: dict):
                 ".,!?;:)"
             )
 
-        # If no URL is in the task sentence,
-        # look at the following sentence.
         elif index + 1 < len(sentences):
 
             next_sentence = sentences[index + 1]
@@ -213,16 +235,16 @@ def analyze_context(data: dict):
                     ".,!?;:)"
                 )
 
-        # If still no URL was found, use the
-        # first URL in the context.
         if not link and clean_urls:
-
             link = clean_urls[0]
+
+        priority = detect_priority(sentence)
 
         extracted_tasks.append({
             "title": sentence,
             "deadline": deadline,
-            "link": link
+            "link": link,
+            "priority": priority
         })
 
     created_tasks = []
@@ -234,7 +256,6 @@ def analyze_context(data: dict):
         for item in extracted_tasks:
 
             title = item["title"]
-
             lower_title = title.lower()
 
             dependency = None
@@ -263,7 +284,7 @@ def analyze_context(data: dict):
 
                 deadline=item["deadline"],
 
-                priority="medium",
+                priority=item["priority"],
 
                 status="READY",
 
@@ -275,7 +296,6 @@ def analyze_context(data: dict):
             )
 
             session.add(task)
-
             created_tasks.append(task)
 
             previous_task_id = task.task_id
@@ -288,7 +308,6 @@ def analyze_context(data: dict):
     return {
         "message":
             "Context analyzed and tasks created successfully",
-
         "tasks": created_tasks
     }
 
