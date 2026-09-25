@@ -59,6 +59,13 @@
             border-radius: 6px;
             text-decoration: none;
         }
+
+        .dependency {
+            background: #fff8e1;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -118,6 +125,12 @@
             placeholder="Source link"
         >
 
+        <input
+            id="depends_on"
+            type="text"
+            placeholder="Depends on task ID"
+        >
+
         <button type="submit">
             Create Task
         </button>
@@ -145,73 +158,47 @@
         function timeRemaining(deadline) {
 
             if (!deadline) {
-
                 return "No deadline";
-
             }
 
-
             const now = new Date();
-
 
             const due = new Date(
                 deadline + "T23:59:59"
             );
 
-
             const difference =
                 due - now;
-
 
             const hours = Math.ceil(
                 difference /
                 (1000 * 60 * 60)
             );
 
-
-            // OVERDUE
-
             if (hours < 0) {
-
                 return "⚠️ Overdue";
-
             }
-
-
-            // DUE TODAY
 
             if (hours < 24) {
-
                 return "🔴 Due today";
-
             }
-
 
             const days =
                 Math.ceil(hours / 24);
 
-
-            // DUE SOON
-
             if (days <= 2) {
-
                 return (
                     "🟠 Due soon — " +
                     days +
                     " days remaining"
                 );
-
             }
-
-
-            // NORMAL
 
             return (
                 "🟢 " +
                 days +
                 " days remaining"
             );
-
         }
 
 
@@ -222,32 +209,27 @@
 
         async function loadTasks() {
 
-
             const response =
                 await fetch("/tasks");
 
-
             const data =
                 await response.json();
-
 
             const taskContainer =
                 document.getElementById(
                     "tasks"
                 );
 
-
             const celebration =
                 document.getElementById(
                     "celebration"
                 );
 
-
             taskContainer.innerHTML = "";
 
 
             // =====================================
-            // CHECK WHETHER ALL TASKS ARE COMPLETE
+            // ALL TASKS COMPLETED
             // =====================================
 
             const allCompleted =
@@ -261,10 +243,8 @@
 
             if (allCompleted) {
 
-
                 celebration.className =
                     "celebration";
-
 
                 celebration.innerHTML = `
 
@@ -279,51 +259,40 @@
 
                 `;
 
-
             } else {
 
+                celebration.className = "";
 
-                celebration.className =
-                    "";
-
-
-                celebration.innerHTML =
-                    "";
+                celebration.innerHTML = "";
 
             }
 
 
 
             // =====================================
-            // DISPLAY EACH TASK
+            // DISPLAY TASKS
             // =====================================
 
             data.tasks.forEach(task => {
-
 
                 const item =
                     document.createElement(
                         "div"
                     );
 
-
-                item.className =
-                    "task";
+                item.className = "task";
 
 
                 // =================================
                 // COMPLETE BUTTON
                 // =================================
 
-                let completeButton =
-                    "";
-
+                let completeButton = "";
 
                 if (
                     task.status !==
                     "COMPLETED"
                 ) {
-
 
                     completeButton = `
 
@@ -347,12 +316,9 @@
                 // SOURCE LINK
                 // =================================
 
-                let sourceLink =
-                    "";
-
+                let sourceLink = "";
 
                 if (task.link) {
-
 
                     sourceLink = `
 
@@ -373,15 +339,51 @@
 
 
                 // =================================
-                // TASK HTML
+                // DEPENDENCY
+                // =================================
+
+                let dependency = "";
+
+                if (task.depends_on) {
+
+                    dependency = `
+
+                        <div class="dependency">
+
+                            <strong>
+                                🔗 Depends on:
+                            </strong>
+
+                            ${task.depends_on}
+
+                        </div>
+
+                    `;
+
+                }
+
+
+
+                // =================================
+                // TASK DISPLAY
                 // =================================
 
                 item.innerHTML = `
 
-
                     <h2>
                         ${task.title}
                     </h2>
+
+
+                    <p>
+
+                        <strong>
+                            Task ID:
+                        </strong>
+
+                        ${task.task_id}
+
+                    </p>
 
 
                     <p>
@@ -458,8 +460,10 @@
                     </p>
 
 
-                    ${completeButton}
+                    ${dependency}
 
+
+                    ${completeButton}
 
                 `;
 
@@ -468,9 +472,7 @@
                     item
                 );
 
-
             });
-
 
         }
 
@@ -482,7 +484,6 @@
 
         async function completeTask(taskId) {
 
-
             await fetch(
 
                 `/tasks/${taskId}/complete`,
@@ -492,7 +493,6 @@
                 }
 
             );
-
 
             await loadTasks();
 
@@ -510,9 +510,7 @@
                 "submit",
                 async function(event) {
 
-
                     event.preventDefault();
-
 
 
                     const title =
@@ -523,14 +521,12 @@
                         .value;
 
 
-
                     const deadline =
                         document
                         .getElementById(
                             "deadline"
                         )
                         .value;
-
 
 
                     const priority =
@@ -541,14 +537,12 @@
                         .value;
 
 
-
                     const source =
                         document
                         .getElementById(
                             "source"
                         )
                         .value;
-
 
 
                     const link =
@@ -559,10 +553,16 @@
                         .value;
 
 
+                    const dependsOn =
+                        document
+                        .getElementById(
+                            "depends_on"
+                        )
+                        .value;
 
-                    // ============================
+
+
                     // SEND TASK TO BACKEND
-                    // ============================
 
                     await fetch(
 
@@ -572,7 +572,6 @@
 
                             method: "POST",
 
-
                             headers: {
 
                                 "Content-Type":
@@ -580,42 +579,38 @@
 
                             },
 
-
                             body:
                                 JSON.stringify({
 
                                     task_id:
                                         "",
 
-
                                     title:
                                         title,
 
-
                                     description:
                                         "Created from ContextFlow dashboard",
-
 
                                     deadline:
                                         deadline ||
                                         null,
 
-
                                     priority:
                                         priority,
 
-
                                     status:
                                         "READY",
-
 
                                     source:
                                         source ||
                                         "Manual input",
 
-
                                     link:
                                         link ||
+                                        null,
+
+                                    depends_on:
+                                        dependsOn ||
                                         null
 
                                 })
@@ -625,10 +620,7 @@
                     );
 
 
-
-                    // ============================
                     // RESET FORM
-                    // ============================
 
                     document
                         .getElementById(
@@ -637,25 +629,19 @@
                         .reset();
 
 
-
-                    // ============================
-                    // REFRESH TASK LIST
-                    // ============================
+                    // REFRESH TASKS
 
                     await loadTasks();
-
 
                 }
             );
 
 
-
         // =========================================
-        // INITIAL PAGE LOAD
+        // INITIAL LOAD
         // =========================================
 
         loadTasks();
-
 
     </script>
 
