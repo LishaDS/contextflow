@@ -1,577 +1,363 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ContextFlow</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContextFlow Dashboard</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background: #f5f7fa;
-        }
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 30px;
+}
 
-        h1 {
-            margin-bottom: 5px;
-        }
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
+h1 {
+    margin-bottom: 5px;
+}
 
-        form,
-        .task {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
+.subtitle {
+    color: #666;
+    margin-bottom: 25px;
+}
 
-        input,
-        select,
-        button {
-            padding: 10px;
-            margin: 5px;
-        }
+.summary {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
 
-        button {
-            cursor: pointer;
-        }
+.summary-card {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
-        .completed {
-            color: green;
-            font-weight: bold;
-        }
+.summary-card .label {
+    color: #666;
+    font-size: 14px;
+}
 
-        .celebration {
-            background: #e8f5e9;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-        }
+.summary-card .number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 8px;
+}
 
-        .source-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: #eef2ff;
-            border-radius: 6px;
-            text-decoration: none;
-        }
+.task-card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
-        .dependency {
-            background: #fff8e1;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
+.task-title {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
 
-        .blocked {
-            color: #b45309;
-            font-weight: bold;
-        }
-    </style>
+.task-id {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 12px;
+}
+
+.detail {
+    margin: 7px 0;
+}
+
+button {
+    padding: 9px 14px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 10px;
+    background: #222;
+    color: white;
+}
+
+.source-link {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 9px 14px;
+    background: #e9eef5;
+    color: #222;
+    text-decoration: none;
+    border-radius: 7px;
+}
+
+.empty {
+    color: #777;
+}
+
+.error {
+    color: #b00020;
+    font-weight: bold;
+}
+
+@media (max-width: 800px) {
+    .summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
 </head>
 
 <body>
 
-    <h1>ContextFlow</h1>
+<div class="container">
 
-    <div class="subtitle">
-        Intelligent Context-to-Workflow Automation
+<h1>ContextFlow</h1>
+
+<div class="subtitle">
+AI-powered Context-to-Workflow Automation
+</div>
+
+<div class="summary">
+
+    <div class="summary-card">
+        <div class="label">Total Tasks</div>
+        <div class="number" id="totalTasks">0</div>
     </div>
 
-    <form id="taskForm">
+    <div class="summary-card">
+        <div class="label">Completed</div>
+        <div class="number" id="completedTasks">0</div>
+    </div>
 
-        <input
-            id="title"
-            type="text"
-            placeholder="Task title"
-            required
-        >
+    <div class="summary-card">
+        <div class="label">Pending</div>
+        <div class="number" id="pendingTasks">0</div>
+    </div>
 
-        <input
-            id="deadline"
-            type="date"
-        >
+    <div class="summary-card">
+        <div class="label">High Priority</div>
+        <div class="number" id="highTasks">0</div>
+    </div>
 
-        <select id="priority">
+    <div class="summary-card">
+        <div class="label">Upcoming Deadlines</div>
+        <div class="number" id="upcomingTasks">0</div>
+    </div>
 
-            <option value="low">
-                Low
-            </option>
+</div>
 
-            <option
-                value="medium"
-                selected
-            >
-                Medium
-            </option>
+<h2>Tasks</h2>
 
-            <option value="high">
-                High
-            </option>
+<div id="tasks">
+Loading tasks...
+</div>
 
-        </select>
+</div>
 
-        <input
-            id="source"
-            type="text"
-            placeholder="Source"
-        >
+<script>
 
-        <input
-            id="link"
-            type="url"
-            placeholder="Source link"
-        >
+async function loadTasks() {
 
-        <input
-            id="depends_on"
-            type="text"
-            placeholder="Depends on task ID"
-        >
+    const container = document.getElementById("tasks");
 
-        <button type="submit">
-            Create Task
-        </button>
+    try {
 
-    </form>
+        const response = await fetch("/tasks");
 
-    <div id="celebration"></div>
-
-    <div id="tasks"></div>
-
-
-    <script>
-
-        function timeRemaining(deadline) {
-
-            if (!deadline) {
-                return "No deadline";
-            }
-
-            const now = new Date();
-
-            const due = new Date(
-                deadline + "T23:59:59"
-            );
-
-            const difference =
-                due - now;
-
-            const hours = Math.ceil(
-                difference /
-                (1000 * 60 * 60)
-            );
-
-            if (hours < 0) {
-                return "⚠️ Overdue";
-            }
-
-            if (hours < 24) {
-                return "🔴 Due today";
-            }
-
-            const days =
-                Math.ceil(hours / 24);
-
-            if (days <= 2) {
-                return (
-                    "🟠 Due soon — " +
-                    days +
-                    " days remaining"
-                );
-            }
-
-            return (
-                "🟢 " +
-                days +
-                " days remaining"
-            );
+        if (!response.ok) {
+            throw new Error("Failed to load tasks");
         }
 
+        const tasks = await response.json();
 
-        async function loadTasks() {
+        updateSummary(tasks);
 
-            const response =
-                await fetch("/tasks");
+        if (!tasks || tasks.length === 0) {
+            container.innerHTML =
+                '<div class="empty">No tasks found.</div>';
+            return;
+        }
 
-            const data =
-                await response.json();
+        container.innerHTML = "";
 
-            const taskContainer =
-                document.getElementById(
-                    "tasks"
-                );
+        tasks.forEach(task => {
 
-            const celebration =
-                document.getElementById(
-                    "celebration"
-                );
+            const card = document.createElement("div");
 
-            taskContainer.innerHTML = "";
+            card.className = "task-card";
 
-            const allCompleted =
-                data.tasks.length > 0 &&
-                data.tasks.every(
-                    task =>
-                        task.status ===
-                        "COMPLETED"
-                );
+            const deadline =
+                task.deadline || "Not specified";
 
-            if (allCompleted) {
+            const dependency =
+                task.depends_on || "None";
 
-                celebration.className =
-                    "celebration";
+            let action = "";
 
-                celebration.innerHTML = `
+            if (task.status === "COMPLETED") {
 
-                    <h2>
-                        🎉 All tasks completed!
-                    </h2>
-
-                    <p>
-                        Great work! Your active
-                        workflow is complete.
-                    </p>
-
-                `;
+                action =
+                    '<div style="margin-top:10px;">✅ Task Completed</div>';
 
             } else {
 
-                celebration.className = "";
-
-                celebration.innerHTML = "";
-
-            }
-
-
-            data.tasks.forEach(task => {
-
-                const item =
-                    document.createElement(
-                        "div"
-                    );
-
-                item.className = "task";
-
-
-                let completeButton = "";
-
-                if (
-                    task.status !==
-                    "COMPLETED"
-                ) {
-
-                    completeButton = `
-
-                        <button
-                            onclick="
-                                completeTask(
-                                    '${task.task_id}'
-                                )
-                            "
-                        >
-                            Mark Complete
-                        </button>
-
-                    `;
-
-                }
-
-
-                let sourceLink = "";
-
-                if (task.link) {
-
-                    sourceLink = `
-
-                        <br>
-
-                        <a
-                            class="source-link"
-                            href="${task.link}"
-                            target="_blank"
-                        >
-                            🔗 Open Source
-                        </a>
-
-                    `;
-
-                }
-
-
-                let dependency = "";
-
-                if (task.depends_on) {
-
-                    dependency = `
-
-                        <div class="dependency">
-
-                            <strong>
-                                🔗 Depends on:
-                            </strong>
-
-                            ${task.depends_on}
-
-                            <br>
-
-                            <span class="blocked">
-                                ⏳ This task is waiting
-                                for its dependency.
-                            </span>
-
-                        </div>
-
-                    `;
-
-                }
-
-
-                item.innerHTML = `
-
-                    <h2>
-                        ${task.title}
-                    </h2>
-
-                    <p>
-
-                        <strong>
-                            Task ID:
-                        </strong>
-
-                        ${task.task_id}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Deadline:
-                        </strong>
-
-                        ${
-                            task.deadline ||
-                            "Not specified"
-                        }
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            ${
-                                timeRemaining(
-                                    task.deadline
-                                )
-                            }
-                        </strong>
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Priority:
-                        </strong>
-
-                        ${task.priority}
-
-                    </p>
-
-                    <p
-                        class="${
-                            task.status ===
-                            "COMPLETED"
-                            ? "completed"
-                            : ""
-                        }"
-                    >
-
-                        <strong>
-                            Status:
-                        </strong>
-
-                        ${task.status}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Source:
-                        </strong>
-
-                        ${
-                            task.source ||
-                            "Unknown"
-                        }
-
-                        ${sourceLink}
-
-                    </p>
-
-                    ${dependency}
-
-                    ${completeButton}
-
+                action = `
+                    <button onclick="completeTask('${task.task_id}')">
+                        ✓ Complete Task
+                    </button>
                 `;
-
-                taskContainer.appendChild(
-                    item
-                );
-
-            });
-
-        }
-
-
-        async function completeTask(taskId) {
-
-            const response =
-                await fetch(
-                    `/tasks/${taskId}/complete`,
-                    {
-                        method: "PATCH"
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (data.error) {
-
-                alert(
-                    "⚠️ " + data.error
-                );
-
-                return;
-
             }
 
-            await loadTasks();
+            const link = task.link
+                ? `
+                    <a
+                        class="source-link"
+                        href="${task.link}"
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        🔗 Open Source
+                    </a>
+                  `
+                : "";
 
-        }
+            card.innerHTML = `
 
+                <div class="task-title">
+                    ${task.title}
+                </div>
 
-        document
-            .getElementById("taskForm")
-            .addEventListener(
-                "submit",
-                async function(event) {
+                <div class="task-id">
+                    Task ID: ${task.task_id}
+                </div>
 
-                    event.preventDefault();
+                <div class="detail">
+                    <strong>Description:</strong>
+                    ${task.description || "Not specified"}
+                </div>
 
-                    const title =
-                        document
-                        .getElementById(
-                            "title"
-                        )
-                        .value;
+                <div class="detail">
+                    <strong>Deadline:</strong>
+                    ${deadline}
+                </div>
 
-                    const deadline =
-                        document
-                        .getElementById(
-                            "deadline"
-                        )
-                        .value;
+                <div class="detail">
+                    <strong>Priority:</strong>
+                    ${task.priority}
+                </div>
 
-                    const priority =
-                        document
-                        .getElementById(
-                            "priority"
-                        )
-                        .value;
+                <div class="detail">
+                    <strong>Status:</strong>
+                    ${task.status}
+                </div>
 
-                    const source =
-                        document
-                        .getElementById(
-                            "source"
-                        )
-                        .value;
+                <div class="detail">
+                    <strong>Dependency:</strong>
+                    ${dependency}
+                </div>
 
-                    const link =
-                        document
-                        .getElementById(
-                            "link"
-                        )
-                        .value;
+                ${action}
 
-                    const dependsOn =
-                        document
-                        .getElementById(
-                            "depends_on"
-                        )
-                        .value;
+                ${link}
 
+            `;
 
-                    await fetch(
-                        "/tasks",
-                        {
-                            method: "POST",
+            container.appendChild(card);
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
+        });
 
-                            body:
-                                JSON.stringify({
+    } catch (error) {
 
-                                    task_id:
-                                        "",
+        console.error(error);
 
-                                    title:
-                                        title,
-
-                                    description:
-                                        "Created from ContextFlow dashboard",
-
-                                    deadline:
-                                        deadline ||
-                                        null,
-
-                                    priority:
-                                        priority,
-
-                                    status:
-                                        "READY",
-
-                                    source:
-                                        source ||
-                                        "Manual input",
-
-                                    link:
-                                        link ||
-                                        null,
-
-                                    depends_on:
-                                        dependsOn ||
-                                        null
-
-                                })
-                        }
-                    );
+        container.innerHTML =
+            '<div class="error">Unable to load tasks. Please check whether the backend is running.</div>';
+    }
+}
 
 
-                    document
-                        .getElementById(
-                            "taskForm"
-                        )
-                        .reset();
+function updateSummary(tasks) {
 
-                    await loadTasks();
+    const total = tasks.length;
 
-                }
+    const completed =
+        tasks.filter(task =>
+            task.status === "COMPLETED"
+        ).length;
+
+    const pending =
+        tasks.filter(task =>
+            task.status !== "COMPLETED"
+        ).length;
+
+    const high =
+        tasks.filter(task =>
+            task.priority &&
+            task.priority.toLowerCase() === "high" &&
+            task.status !== "COMPLETED"
+        ).length;
+
+    const today = new Date();
+
+    const upcoming =
+        tasks.filter(task =>
+            task.deadline &&
+            task.status !== "COMPLETED" &&
+            new Date(task.deadline + "T23:59:59") >= today
+        ).length;
+
+    document.getElementById("totalTasks").textContent = total;
+    document.getElementById("completedTasks").textContent = completed;
+    document.getElementById("pendingTasks").textContent = pending;
+    document.getElementById("highTasks").textContent = high;
+    document.getElementById("upcomingTasks").textContent = upcoming;
+}
+
+
+async function completeTask(taskId) {
+
+    try {
+
+        const response = await fetch(
+            `/tasks/${taskId}/complete`,
+            {
+                method: "PATCH"
+            }
+        );
+
+        if (!response.ok) {
+
+            const error = await response.json();
+
+            alert(
+                error.detail ||
+                "Unable to complete task."
             );
 
+            return;
+        }
 
-        loadTasks();
+        await loadTasks();
 
-    </script>
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Could not connect to ContextFlow backend."
+        );
+    }
+}
+
+
+loadTasks();
+
+</script>
 
 </body>
 </html>

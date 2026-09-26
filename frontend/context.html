@@ -1,298 +1,234 @@
+cat > frontend/context.html <<'EOF'
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ContextFlow - Context Capture</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContextFlow - Context Analyzer</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
-            background: #f5f7fa;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
         }
 
         textarea {
             width: 100%;
-            max-width: 800px;
-            height: 250px;
+            min-height: 180px;
             padding: 15px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
         }
 
         button {
             margin-top: 15px;
             padding: 12px 20px;
-            cursor: pointer;
-        }
-
-        .box {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            max-width: 850px;
-        }
-
-        .result {
-            margin-top: 25px;
-            padding: 20px;
-            background: #eef2ff;
+            border: none;
             border-radius: 8px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
         }
 
-        .task {
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .card {
             background: white;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 6px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .task-id {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 10px;
         }
 
         .success {
-            background: #e8f5e9;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 8px;
+            color: green;
+            font-weight: bold;
+            margin-bottom: 15px;
         }
 
-        .dashboard-button {
+        .error {
+            color: #b00020;
+            font-weight: bold;
+        }
+
+        a {
             display: inline-block;
-            margin-top: 15px;
-            padding: 12px 20px;
-            background: #333;
-            color: white;
+            margin-top: 8px;
             text-decoration: none;
-            border-radius: 6px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="box">
+<div class="container">
 
-        <h1>ContextFlow</h1>
+    <h1>ContextFlow</h1>
 
-        <h2>Context Capture</h2>
-
-        <p>
-            Paste information here and ContextFlow will
-            identify actionable tasks, deadlines,
-            dependencies and source links.
-        </p>
-
-        <textarea
-            id="context"
-            placeholder="Paste synthetic context here..."
-        ></textarea>
-
-        <br>
-
-        <button onclick="analyzeContext()">
-            Analyze Context
-        </button>
-
-        <div id="result"></div>
-
+    <div class="subtitle">
+        Turn scattered context into actionable tasks
     </div>
 
+    <h2>Context Analyzer</h2>
 
-    <script>
+    <textarea
+        id="contextInput"
+        placeholder="Paste your context here..."></textarea>
 
-        async function analyzeContext() {
+    <br>
 
-            const context =
-                document
-                .getElementById("context")
-                .value;
+    <button onclick="analyzeContext()">
+        Analyze Context
+    </button>
 
-            const result =
-                document
-                .getElementById("result");
+    <div id="results" class="results"></div>
 
-            if (!context.trim()) {
+</div>
 
-                result.innerHTML =
-                    "<p>Please enter some context.</p>";
+<script>
 
-                return;
+async function analyzeContext() {
 
-            }
+    const context = document.getElementById("contextInput").value.trim();
+    const results = document.getElementById("results");
 
-            result.innerHTML =
-                "<div class='result'>" +
-                "<p>🧠 Analyzing context...</p>" +
-                "</div>";
+    if (!context) {
+        results.innerHTML =
+            '<div class="error">Please enter some context first.</div>';
+        return;
+    }
 
-            try {
+    results.innerHTML = "Analyzing context...";
 
-                const response =
-                    await fetch(
-                        "/analyze-context",
-                        {
-                            method: "POST",
+    try {
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
+        const response = await fetch("/analyze-context", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                context: context
+            })
+        });
 
-                            body:
-                                JSON.stringify({
-                                    context: context
-                                })
-                        }
-                    );
+        const data = await response.json();
 
-                const data =
-                    await response.json();
-
-                if (data.error) {
-
-                    result.innerHTML = `
-
-                        <div class="result">
-
-                            <strong>
-                                Error:
-                            </strong>
-
-                            ${data.error}
-
-                        </div>
-
-                    `;
-
-                    return;
-
-                }
-
-
-                let html = `
-
-                    <div class="success">
-
-                        <h3>
-                            ✅ Tasks created successfully!
-                        </h3>
-
-                        <p>
-                            ContextFlow identified
-                            and saved
-                            ${
-                                data.tasks.length
-                            }
-                            task(s).
-                        </p>
-
-                    </div>
-
-                    <div class="result">
-
-                        <h3>
-                            🧠 Extracted Tasks
-                        </h3>
-
-                `;
-
-
-                if (
-                    data.tasks &&
-                    data.tasks.length > 0
-                ) {
-
-                    data.tasks.forEach(
-                        function(task) {
-
-                            html += `
-
-                                <div class="task">
-
-                                    <strong>
-                                        ${task.title}
-                                    </strong>
-
-                                    <br>
-
-                                    <small>
-                                        Task ID:
-                                        ${task.task_id}
-                                    </small>
-
-                                    <br>
-
-                                    <small>
-                                        Deadline:
-                                        ${
-                                            task.deadline ||
-                                            "Not specified"
-                                        }
-                                    </small>
-
-                                    <br>
-
-                                    <small>
-                                        Status:
-                                        ${task.status}
-                                    </small>
-
-                                </div>
-
-                            `;
-
-                        }
-                    );
-
-                } else {
-
-                    html += `
-                        <p>
-                            No actionable tasks found.
-                        </p>
-                    `;
-
-                }
-
-
-                html += `
-
-                    </div>
-
-                    <a
-                        class="dashboard-button"
-                        href="/dashboard"
-                    >
-                        📊 Open Dashboard
-                    </a>
-
-                `;
-
-
-                result.innerHTML = html;
-
-            } catch (error) {
-
-                result.innerHTML = `
-
-                    <div class="result">
-
-                        <strong>
-                            Something went wrong.
-                        </strong>
-
-                        <p>
-                            Please try again.
-                        </p>
-
-                    </div>
-
-                `;
-
-            }
-
+        if (!response.ok) {
+            results.innerHTML =
+                `<div class="error">${data.detail || "Analysis failed."}</div>`;
+            return;
         }
 
-    </script>
+        const tasks = data.created_tasks || [];
+
+        if (tasks.length === 0) {
+            results.innerHTML =
+                '<div class="card">No new tasks were created.</div>';
+            return;
+        }
+
+        let html = `
+            <div class="success">
+                ✅ Context analyzed successfully
+            </div>
+        `;
+
+        tasks.forEach(task => {
+
+            html += `
+                <div class="card">
+
+                    <div class="task-title">
+                        ${task.title || "Untitled task"}
+                    </div>
+
+                    <div class="task-id">
+                        Task ID: ${task.task_id || "Not available"}
+                    </div>
+
+                    <div>
+                        <strong>Deadline:</strong>
+                        ${task.deadline || "Not specified"}
+                    </div>
+
+                    <div>
+                        <strong>Priority:</strong>
+                        ${task.priority || "Not specified"}
+                    </div>
+
+                    <div>
+                        <strong>Status:</strong>
+                        ${task.status || "Not specified"}
+                    </div>
+
+                    <div>
+                        <strong>Dependency:</strong>
+                        ${task.depends_on || "None"}
+                    </div>
+
+                    ${
+                        task.link
+                        ? `<a href="${task.link}" target="_blank">
+                            🔗 Open Source
+                           </a>`
+                        : ""
+                    }
+
+                </div>
+            `;
+        });
+
+        results.innerHTML = html;
+
+    } catch (error) {
+
+        console.error(error);
+
+        results.innerHTML =
+            '<div class="error">Could not connect to ContextFlow backend.</div>';
+    }
+}
+
+</script>
 
 </body>
 </html>
