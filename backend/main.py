@@ -9,6 +9,7 @@ import uuid
 
 from backend.database import engine, create_db_and_tables
 from backend.models import Task
+from backend.services.task_engine import classify_task
 
 
 app = FastAPI(title="ContextFlow API")
@@ -572,6 +573,8 @@ def analyze_context(request: ContextRequest):
                 ),
                 deadline=deadline,
                 priority=priority,
+                category=classify_task(title)["category"],
+                confidence=classify_task(title)["confidence"],
                 status="READY",
                 source="ContextFlow Context Analyzer",
                 link=link,
