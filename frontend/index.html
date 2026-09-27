@@ -152,13 +152,26 @@ AI-powered Context-to-Workflow Automation
 
 </div>
 
-
 <div style="margin-bottom:20px;">
-    <button onclick="filterTasks('ALL')">All</button>
-    <button onclick="filterTasks('PENDING')" style="margin-left:8px;">Pending</button>
-    <button onclick="filterTasks('COMPLETED')" style="margin-left:8px;">Completed</button>
-    <button onclick="filterTasks('HIGH')" style="margin-left:8px;">High Priority</button>
+
+    <button onclick="filterTasks('ALL')">
+        All
+    </button>
+
+    <button onclick="filterTasks('PENDING')" style="margin-left:8px;">
+        Pending
+    </button>
+
+    <button onclick="filterTasks('COMPLETED')" style="margin-left:8px;">
+        Completed
+    </button>
+
+    <button onclick="filterTasks('HIGH')" style="margin-left:8px;">
+        High Priority
+    </button>
+
 </div>
+
 <h2>Tasks</h2>
 
 <div id="tasks">
@@ -169,41 +182,63 @@ Loading tasks...
 
 <script>
 
-
 let allTasks = [];
 
 function filterTasks(filter) {
+
     let filtered = allTasks;
 
     if (filter === "PENDING") {
-        filtered = allTasks.filter(task => task.status !== "COMPLETED");
+
+        filtered = allTasks.filter(
+            task => task.status !== "COMPLETED"
+        );
+
     }
 
     if (filter === "COMPLETED") {
-        filtered = allTasks.filter(task => task.status === "COMPLETED");
+
+        filtered = allTasks.filter(
+            task => task.status === "COMPLETED"
+        );
+
     }
 
     if (filter === "HIGH") {
+
         filtered = allTasks.filter(
-            task => task.priority &&
-            task.priority.toLowerCase() === "high"
+            task =>
+                task.priority &&
+                task.priority.toLowerCase() === "high"
         );
+
     }
 
     renderTasks(filtered);
 }
 
+
 function renderTasks(tasks) {
+
     const container = document.getElementById("tasks");
+
     container.innerHTML = "";
 
     tasks.forEach(task => {
+
         const card = document.createElement("div");
+
         card.className = "task-card";
 
         card.innerHTML = `
-            <div class="task-title">${task.title}</div>
-            <div class="task-id">Task ID: ${task.task_id}</div>
+
+            <div class="task-title">
+                ${task.title}
+            </div>
+
+            <div class="task-id">
+                Task ID: ${task.task_id}
+            </div>
 
             <div class="detail">
                 <strong>Description:</strong>
@@ -221,6 +256,18 @@ function renderTasks(tasks) {
             </div>
 
             <div class="detail">
+                <strong>Category:</strong>
+                ${task.category || "general"}
+            </div>
+
+            <div class="detail">
+                <strong>AI Confidence:</strong>
+                ${task.confidence != null
+                    ? Math.round(task.confidence * 100) + "%"
+                    : "Not available"}
+            </div>
+
+            <div class="detail">
                 <strong>Status:</strong>
                 ${task.status}
             </div>
@@ -229,11 +276,14 @@ function renderTasks(tasks) {
                 <strong>Dependency:</strong>
                 ${task.depends_on || "None"}
             </div>
+
         `;
 
         container.appendChild(card);
+
     });
 }
+
 
 async function loadTasks() {
 
@@ -244,7 +294,9 @@ async function loadTasks() {
         const response = await fetch("/tasks");
 
         if (!response.ok) {
+
             throw new Error("Failed to load tasks");
+
         }
 
         const tasks = await response.json();
@@ -254,9 +306,12 @@ async function loadTasks() {
         updateSummary(tasks);
 
         if (!tasks || tasks.length === 0) {
+
             container.innerHTML =
                 '<div class="empty">No tasks found.</div>';
+
             return;
+
         }
 
         container.innerHTML = "";
@@ -273,6 +328,14 @@ async function loadTasks() {
             const dependency =
                 task.depends_on || "None";
 
+            const category =
+                task.category || "general";
+
+            const confidence =
+                task.confidence != null
+                    ? Math.round(task.confidence * 100) + "%"
+                    : "Not available";
+
             let action = "";
 
             if (task.status === "COMPLETED") {
@@ -287,6 +350,7 @@ async function loadTasks() {
                         ✓ Complete Task
                     </button>
                 `;
+
             }
 
             const link = task.link
@@ -327,6 +391,16 @@ async function loadTasks() {
                 </div>
 
                 <div class="detail">
+                    <strong>Category:</strong>
+                    ${category}
+                </div>
+
+                <div class="detail">
+                    <strong>AI Confidence:</strong>
+                    ${confidence}
+                </div>
+
+                <div class="detail">
                     <strong>Status:</strong>
                     ${task.status}
                 </div>
@@ -352,6 +426,7 @@ async function loadTasks() {
 
         container.innerHTML =
             '<div class="error">Unable to load tasks. Please check whether the backend is running.</div>';
+
     }
 }
 
@@ -361,36 +436,46 @@ function updateSummary(tasks) {
     const total = tasks.length;
 
     const completed =
-        tasks.filter(task =>
-            task.status === "COMPLETED"
+        tasks.filter(
+            task => task.status === "COMPLETED"
         ).length;
 
     const pending =
-        tasks.filter(task =>
-            task.status !== "COMPLETED"
+        tasks.filter(
+            task => task.status !== "COMPLETED"
         ).length;
 
     const high =
-        tasks.filter(task =>
-            task.priority &&
-            task.priority.toLowerCase() === "high" &&
-            task.status !== "COMPLETED"
+        tasks.filter(
+            task =>
+                task.priority &&
+                task.priority.toLowerCase() === "high" &&
+                task.status !== "COMPLETED"
         ).length;
 
     const today = new Date();
 
     const upcoming =
-        tasks.filter(task =>
-            task.deadline &&
-            task.status !== "COMPLETED" &&
-            new Date(task.deadline + "T23:59:59") >= today
+        tasks.filter(
+            task =>
+                task.deadline &&
+                task.status !== "COMPLETED" &&
+                new Date(task.deadline + "T23:59:59") >= today
         ).length;
 
     document.getElementById("totalTasks").textContent = total;
-    document.getElementById("completedTasks").textContent = completed;
-    document.getElementById("pendingTasks").textContent = pending;
-    document.getElementById("highTasks").textContent = high;
-    document.getElementById("upcomingTasks").textContent = upcoming;
+
+    document.getElementById("completedTasks").textContent =
+        completed;
+
+    document.getElementById("pendingTasks").textContent =
+        pending;
+
+    document.getElementById("highTasks").textContent =
+        high;
+
+    document.getElementById("upcomingTasks").textContent =
+        upcoming;
 }
 
 
@@ -415,6 +500,7 @@ async function completeTask(taskId) {
             );
 
             return;
+
         }
 
         await loadTasks();
@@ -426,6 +512,7 @@ async function completeTask(taskId) {
         alert(
             "Could not connect to ContextFlow backend."
         );
+
     }
 }
 
