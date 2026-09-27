@@ -328,6 +328,24 @@ async function loadTasks() {
             const dependency =
                 task.depends_on || "None";
 
+            let deadlineStatus = "No deadline";
+
+            if (task.deadline) {
+                const today = new Date();
+                const due = new Date(task.deadline + "T23:59:59");
+                const daysLeft = Math.ceil((due - today) / 86400000);
+
+                if (task.status === "COMPLETED") {
+                    deadlineStatus = "Completed";
+                } else if (daysLeft < 0) {
+                    deadlineStatus = "Overdue";
+                } else if (daysLeft <= 2) {
+                    deadlineStatus = "Due Soon";
+                } else {
+                    deadlineStatus = "On Track";
+                }
+            }
+
             const category =
                 task.category || "general";
 
@@ -403,6 +421,11 @@ async function loadTasks() {
                 <div class="detail">
                     <strong>Status:</strong>
                     ${task.status}
+                </div>
+
+                <div class="detail">
+                    <strong>Deadline Status:</strong>
+                    ${deadlineStatus}
                 </div>
 
                 <div class="detail">
