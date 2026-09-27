@@ -3,16 +3,22 @@ from typing import Any
 
 def analyze_context(context: str) -> dict[str, Any]:
     """
-    AI-engine interface for ContextFlow.
+    ContextFlow AI analysis interface.
 
-    Current MVP implementation keeps the AI layer separate from
-    the rule-based extraction engine. A real LLM provider can
-    be connected here later without changing the workflow layer.
+    This service prepares a stable interface for a future LLM provider.
+    The current MVP keeps execution deterministic and does not allow
+    the AI layer to directly modify the database.
     """
+
+    if not context or not context.strip():
+        return {
+            "status": "error",
+            "message": "Context cannot be empty",
+            "tasks": []
+        }
 
     return {
         "status": "ready",
         "provider": "rule-based-mvp",
-        "context": context,
         "tasks": []
-    }
+    }  
