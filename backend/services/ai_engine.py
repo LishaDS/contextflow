@@ -1,13 +1,11 @@
 from typing import Any
 
+from backend.services.task_engine import classify_task
+
 
 def analyze_context(context: str) -> dict[str, Any]:
     """
     ContextFlow AI analysis interface.
-
-    This service prepares a stable interface for a future LLM provider.
-    The current MVP keeps execution deterministic and does not allow
-    the AI layer to directly modify the database.
     """
 
     if not context or not context.strip():
@@ -17,8 +15,16 @@ def analyze_context(context: str) -> dict[str, Any]:
             "tasks": []
         }
 
+    task_info = classify_task(context)
+
     return {
         "status": "ready",
         "provider": "rule-based-mvp",
-        "tasks": []
-    }  
+        "tasks": [
+            {
+                "title": context.strip(),
+                "category": task_info["category"],
+                "confidence": task_info["confidence"]
+            }
+        ]
+    }
