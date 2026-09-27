@@ -249,6 +249,8 @@ def create_task(task_data: TaskCreate):
         description=task_data.description,
         deadline=task_data.deadline,
         priority=task_data.priority,
+        category=task_data.category,
+        confidence=task_data.confidence,
         status="READY",
         source=task_data.source,
         link=task_data.link,
@@ -635,6 +637,7 @@ def context_page():
     context_path = Path(
         "frontend/context.html"
     )
+    
 
     if not context_path.exists():
 
