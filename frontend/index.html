@@ -152,6 +152,13 @@ AI-powered Context-to-Workflow Automation
 
 </div>
 
+
+<div style="margin-bottom:20px;">
+    <button onclick="filterTasks('ALL')">All</button>
+    <button onclick="filterTasks('PENDING')" style="margin-left:8px;">Pending</button>
+    <button onclick="filterTasks('COMPLETED')" style="margin-left:8px;">Completed</button>
+    <button onclick="filterTasks('HIGH')" style="margin-left:8px;">High Priority</button>
+</div>
 <h2>Tasks</h2>
 
 <div id="tasks">
@@ -161,6 +168,72 @@ Loading tasks...
 </div>
 
 <script>
+
+
+let allTasks = [];
+
+function filterTasks(filter) {
+    let filtered = allTasks;
+
+    if (filter === "PENDING") {
+        filtered = allTasks.filter(task => task.status !== "COMPLETED");
+    }
+
+    if (filter === "COMPLETED") {
+        filtered = allTasks.filter(task => task.status === "COMPLETED");
+    }
+
+    if (filter === "HIGH") {
+        filtered = allTasks.filter(
+            task => task.priority &&
+            task.priority.toLowerCase() === "high"
+        );
+    }
+
+    renderTasks(filtered);
+}
+
+function renderTasks(tasks) {
+    const container = document.getElementById("tasks");
+    container.innerHTML = "";
+
+    tasks.forEach(task => {
+        const card = document.createElement("div");
+        card.className = "task-card";
+
+        card.innerHTML = `
+            <div class="task-title">${task.title}</div>
+            <div class="task-id">Task ID: ${task.task_id}</div>
+
+            <div class="detail">
+                <strong>Description:</strong>
+                ${task.description || "Not specified"}
+            </div>
+
+            <div class="detail">
+                <strong>Deadline:</strong>
+                ${task.deadline || "Not specified"}
+            </div>
+
+            <div class="detail">
+                <strong>Priority:</strong>
+                ${task.priority}
+            </div>
+
+            <div class="detail">
+                <strong>Status:</strong>
+                ${task.status}
+            </div>
+
+            <div class="detail">
+                <strong>Dependency:</strong>
+                ${task.depends_on || "None"}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
 
 async function loadTasks() {
 
@@ -175,6 +248,8 @@ async function loadTasks() {
         }
 
         const tasks = await response.json();
+
+        allTasks = tasks;
 
         updateSummary(tasks);
 
