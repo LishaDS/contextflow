@@ -169,6 +169,8 @@ AI-powered Context-to-Workflow Automation
     <button onclick="filterTasks('HIGH')" style="margin-left:8px;">
         High Priority
     </button>
+    <input id="taskSearch" type="text" placeholder="Search tasks..." oninput="searchTasks()" style="margin-left:8px; padding:8px;">
+    <input id="taskSearch" type="text" placeholder="Search tasks..." oninput="searchTasks()" style="margin-left:8px; padding:8px;">
 
 </div>
 
@@ -183,6 +185,20 @@ Loading tasks...
 <script>
 
 let allTasks = [];
+
+function searchTasks() {
+    const query = document.getElementById("taskSearch").value.toLowerCase().trim();
+
+    const filtered = allTasks.filter(task =>
+        task.title.toLowerCase().includes(query) ||
+        (task.category || "").toLowerCase().includes(query) ||
+        (task.priority || "").toLowerCase().includes(query) ||
+        (task.status || "").toLowerCase().includes(query)
+    );
+
+    renderTasks(filtered);
+}
+
 
 function filterTasks(filter) {
 
