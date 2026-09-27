@@ -30,6 +30,8 @@ class TaskCreate(BaseModel):
     description: str | None = None
     deadline: str | None = None
     priority: str = "medium"
+    category: str = "general"
+    confidence: float = 0.0
     source: str | None = None
     link: str | None = None
     depends_on: str | None = None
