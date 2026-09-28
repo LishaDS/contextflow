@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "ContextFlow",
+  "version": "1.0.0",
+  "description": "Capture selected context and turn it into actionable tasks.",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
