@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Capture selected context and turn it into actionable tasks.",
   "permissions": ["activeTab", "storage"],
+  "host_permissions": ["https://bookish-barnacle-jjr55rjwv4v2pv9-8000.app.github.dev/*"],
   "action": {
     "default_popup": "popup.html"
   }
