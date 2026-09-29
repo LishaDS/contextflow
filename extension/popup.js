@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000/analyze-context";
+const API_URL = "https://bookish-barnacle-jjr55rjwv4v2pv9-8000.app.github.dev/analyze-context";
 
 document.getElementById("analyze").addEventListener("click", async () => {
     const context = document.getElementById("context").value.trim();
