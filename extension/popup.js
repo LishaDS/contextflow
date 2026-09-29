@@ -1,8 +1,19 @@
 const API_URL = "https://bookish-barnacle-jjr55rjwv4v2pv9-8000.app.github.dev/analyze-context-extension";
 
-document.getElementById("analyze").addEventListener("click", async () => {
-    const context = document.getElementById("context").value.trim();
-    const status = document.getElementById("status");
+const contextBox = document.getElementById("context");
+const analyzeButton = document.getElementById("analyze");
+const status = document.getElementById("status");
+
+chrome.storage.local.get(["selectedContext"], (result) => {
+    if (result.selectedContext) {
+        contextBox.value = result.selectedContext;
+
+        chrome.storage.local.remove("selectedContext");
+    }
+});
+
+analyzeButton.addEventListener("click", async () => {
+    const context = contextBox.value.trim();
 
     if (!context) {
         status.textContent = "Please enter some context.";
