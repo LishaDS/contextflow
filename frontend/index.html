@@ -352,23 +352,7 @@ if (task.depends_on) {
     }
 }
 
-            let deadlineStatus = "No deadline";
-
-            if (task.deadline) {
-                const today = new Date();
-                const due = new Date(task.deadline + "T23:59:59");
-                const daysLeft = Math.ceil((due - today) / 86400000);
-
-                if (task.status === "COMPLETED") {
-                    deadlineStatus = "Completed";
-                } else if (daysLeft < 0) {
-                    deadlineStatus = "Overdue";
-                } else if (daysLeft <= 2) {
-                    deadlineStatus = "Due Soon";
-                } else {
-                    deadlineStatus = "On Track";
-                }
-            }
+           let deadlineStatus = task.deadline_status || "No deadline";
 
             const category =
                 task.category || "general";
