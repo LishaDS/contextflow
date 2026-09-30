@@ -11,5 +11,12 @@ chrome.contextMenus.onClicked.addListener((info) => {
         chrome.storage.local.set({
             selectedContext: info.selectionText
         });
+
+        chrome.notifications.create({
+            type: "basic",
+            iconUrl: "icon.png",
+            title: "ContextFlow",
+            message: "Your selected context was sent to ContextFlow."
+        });
     }
 });
