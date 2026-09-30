@@ -1,3 +1,8 @@
+from backend.services.deadline_engine import (
+    get_deadline_status,
+    get_reminder_message,
+)
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,9 +17,13 @@ import json
 from backend.database import engine, create_db_and_tables
 from backend.models import Task
 from backend.services.task_engine import classify_task
+from backend.reminders import router as reminder_router
 
 
 app = FastAPI(title="ContextFlow API")
+
+app.include_router(reminder_router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,21 +61,28 @@ def normalize_title(title: str) -> str:
     title = re.sub(r"^(please|kindly)\s+", "", title)
     title = re.sub(r"[^\w\s]", "", title)
     title = re.sub(r"\s+", " ", title).strip()
+
     return title
 
 
 def extract_date(text: str):
+
     pattern = (
         r"\b(January|February|March|April|May|June|July|August|"
         r"September|October|November|December)\s+(\d{1,2})\b"
     )
 
-    match = re.search(pattern, text, re.IGNORECASE)
+    match = re.search(
+        pattern,
+        text,
+        re.IGNORECASE
+    )
 
     if not match:
         return None
 
     try:
+
         date_obj = datetime.strptime(
             f"{match.group(1)} {match.group(2)} 2026",
             "%B %d %Y"
@@ -79,6 +95,7 @@ def extract_date(text: str):
 
 
 def extract_url(text: str):
+
     match = re.search(
         r"https?://[^\s]+",
         text
@@ -253,7 +270,25 @@ def get_tasks():
             select(Task)
         ).all()
 
-    return tasks
+    result = []
+
+    for task in tasks:
+
+        task_data = task.model_dump()
+
+        task_data["deadline_status"] = get_deadline_status(
+            task.deadline,
+            task.status
+        )
+
+        task_data["reminder_message"] = get_reminder_message(
+            task.deadline,
+            task.status
+        )
+
+        result.append(task_data)
+
+    return result
 
 
 @app.patch("/tasks/{task_id}/complete")
@@ -492,6 +527,7 @@ def analyze_context_logic(context: str):
                 or "after starting" in sentence_lower
                 or "before starting" in sentence_lower
             ):
+
                 depends_on = previous_task_id
 
             task_info = classify_task(title)

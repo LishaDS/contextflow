@@ -1,0 +1,21 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_SECURE_COOKIE=false
+      - N8N_HOST=bookish-barnacle-jjr55rjwv4v2pv9-5678.app.github.dev
+      - N8N_PROTOCOL=https
+      - N8N_EDITOR_BASE_URL=https://bookish-barnacle-jjr55rjwv4v2pv9-5678.app.github.dev
+      - WEBHOOK_URL=https://bookish-barnacle-jjr55rjwv4v2pv9-5678.app.github.dev/
+      - N8N_PROXY_HOPS=1
+      - N8N_PUSH_BACKEND=sse
+      - N8N_PUSH_ALLOWED_ORIGINS=https://bookish-barnacle-jjr55rjwv4v2pv9-5678.app.github.dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:
