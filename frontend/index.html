@@ -340,8 +340,17 @@ async function loadTasks() {
             const deadline =
                 task.deadline || "Not specified";
 
-            const dependency =
-                task.depends_on || "None";
+            let dependency = "None";
+
+if (task.depends_on) {
+    const dependencyTask = allTasks.find(
+        t => t.task_id === task.depends_on
+    );
+
+    if (dependencyTask) {
+        dependency = dependencyTask.title;
+    }
+}
 
             let deadlineStatus = "No deadline";
 
