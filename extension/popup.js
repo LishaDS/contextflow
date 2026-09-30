@@ -7,7 +7,6 @@ const status = document.getElementById("status");
 chrome.storage.local.get(["selectedContext"], (result) => {
     if (result.selectedContext) {
         contextBox.value = result.selectedContext;
-
         chrome.storage.local.remove("selectedContext");
     }
 });
@@ -47,8 +46,17 @@ analyzeButton.addEventListener("click", async () => {
 
         const data = JSON.parse(responseText);
 
-        status.textContent =
-            `Created ${data.created_tasks.length} task(s) successfully.`;
+        if (data.created_tasks && data.created_tasks.length > 0) {
+            const task = data.created_tasks[0];
+
+            status.textContent =
+                `Created: ${task.title} | Category: ${task.category} | Priority: ${task.priority} | Deadline: ${task.deadline || "None"}`;
+        } else if (data.duplicate_tasks && data.duplicate_tasks.length > 0) {
+            status.textContent =
+                `Duplicate task detected: ${data.duplicate_tasks[0].title}`;
+        } else {
+            status.textContent = "No new task was created.";
+        }
 
     } catch (error) {
         status.textContent = "Error: " + error.message;

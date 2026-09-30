@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
 import re
 import uuid
+import json
 
 from backend.database import engine, create_db_and_tables
 from backend.models import Task
@@ -14,17 +16,16 @@ from backend.services.task_engine import classify_task
 
 app = FastAPI(title="ContextFlow API")
 
-
-# ---------------------------------------------------------
-# Startup
-# ---------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 create_db_and_tables()
 
-
-# ---------------------------------------------------------
-# Request models
-# ---------------------------------------------------------
 
 class TaskCreate(BaseModel):
     title: str
@@ -42,26 +43,15 @@ class ContextRequest(BaseModel):
     context: str
 
 
-# ---------------------------------------------------------
-# Helper functions
-# ---------------------------------------------------------
-
 def generate_task_id():
     return "T-" + str(uuid.uuid4())[:8].upper()
 
 
 def normalize_title(title: str) -> str:
     title = title.lower().strip()
-
-    # Remove polite prefixes
     title = re.sub(r"^(please|kindly)\s+", "", title)
-
-    # Remove punctuation
     title = re.sub(r"[^\w\s]", "", title)
-
-    # Compress spaces
     title = re.sub(r"\s+", " ", title).strip()
-
     return title
 
 
@@ -71,21 +61,14 @@ def extract_date(text: str):
         r"September|October|November|December)\s+(\d{1,2})\b"
     )
 
-    match = re.search(
-        pattern,
-        text,
-        re.IGNORECASE
-    )
+    match = re.search(pattern, text, re.IGNORECASE)
 
     if not match:
         return None
 
-    month = match.group(1)
-    day = match.group(2)
-
     try:
         date_obj = datetime.strptime(
-            f"{month} {day} 2026",
+            f"{match.group(1)} {match.group(2)} 2026",
             "%B %d %Y"
         )
 
@@ -138,8 +121,6 @@ def is_action_sentence(sentence: str) -> bool:
 
     sentence_lower = sentence.lower().strip()
 
-    # Supporting sentences should not become
-    # separate tasks.
     if is_supporting_sentence(sentence):
         return False
 
@@ -225,10 +206,6 @@ def priority_value(priority: str) -> int:
     )
 
 
-# ---------------------------------------------------------
-# Root
-# ---------------------------------------------------------
-
 @app.get("/")
 def root():
 
@@ -236,10 +213,6 @@ def root():
         "message": "ContextFlow backend is running!"
     }
 
-
-# ---------------------------------------------------------
-# Create task
-# ---------------------------------------------------------
 
 @app.post("/tasks")
 def create_task(task_data: TaskCreate):
@@ -263,15 +236,13 @@ def create_task(task_data: TaskCreate):
     with Session(engine) as session:
 
         session.add(task)
+
         session.commit()
+
         session.refresh(task)
 
     return task
 
-
-# ---------------------------------------------------------
-# Get tasks
-# ---------------------------------------------------------
 
 @app.get("/tasks")
 def get_tasks():
@@ -284,10 +255,6 @@ def get_tasks():
 
     return tasks
 
-
-# ---------------------------------------------------------
-# Complete task
-# ---------------------------------------------------------
 
 @app.patch("/tasks/{task_id}/complete")
 def complete_task(task_id: str):
@@ -306,7 +273,6 @@ def complete_task(task_id: str):
                 detail="Task not found"
             )
 
-        # Check dependency
         if task.depends_on:
 
             dependency = session.get(
@@ -324,20 +290,17 @@ def complete_task(task_id: str):
         task.status = "COMPLETED"
 
         session.add(task)
+
         session.commit()
+
         session.refresh(task)
 
     return task
 
 
-# ---------------------------------------------------------
-# Context Analyzer
-# ---------------------------------------------------------
+def analyze_context_logic(context: str):
 
-@app.post("/analyze-context")
-def analyze_context(request: ContextRequest):
-
-    context = request.context.strip()
+    context = context.strip()
 
     if not context:
 
@@ -352,6 +315,7 @@ def analyze_context(request: ContextRequest):
     )
 
     created_tasks = []
+
     duplicate_tasks = []
 
     previous_task_id = None
@@ -364,19 +328,6 @@ def analyze_context(request: ContextRequest):
 
             if not sentence:
                 continue
-
-            # -------------------------------------------------
-            # Supporting information
-            # -------------------------------------------------
-            #
-            # Example:
-            #
-            # "Please attend the workshop."
-            #
-            # "The workshop must be completed by October 5."
-            #
-            # The second sentence should enrich the first task.
-            # -------------------------------------------------
 
             if is_supporting_sentence(sentence):
 
@@ -399,22 +350,22 @@ def analyze_context(request: ContextRequest):
 
                         changed = False
 
-                        # Add deadline
                         if (
                             deadline
                             and not previous_task.deadline
                         ):
 
                             previous_task.deadline = deadline
+
                             changed = True
 
-                        # Add resource link
                         if (
                             link
                             and not previous_task.link
                         ):
 
                             previous_task.link = link
+
                             changed = True
 
                         if changed:
@@ -431,16 +382,9 @@ def analyze_context(request: ContextRequest):
 
                 continue
 
-            # -------------------------------------------------
-            # Ignore non-action sentences
-            # -------------------------------------------------
-
             if not is_action_sentence(sentence):
-                continue
 
-            # -------------------------------------------------
-            # Extract task information
-            # -------------------------------------------------
+                continue
 
             title = sentence
 
@@ -460,10 +404,6 @@ def analyze_context(request: ContextRequest):
                 title
             )
 
-            # -------------------------------------------------
-            # Duplicate detection
-            # -------------------------------------------------
-
             existing_tasks = session.exec(
                 select(Task)
             ).all()
@@ -478,50 +418,47 @@ def analyze_context(request: ContextRequest):
                 ):
 
                     duplicate = existing
-                    break
 
-            # -------------------------------------------------
-            # Duplicate enrichment
-            # -------------------------------------------------
+                    break
 
             if duplicate:
 
                 changed = False
 
-                # Add newly discovered deadline
                 if (
                     deadline
                     and not duplicate.deadline
                 ):
 
                     duplicate.deadline = deadline
+
                     changed = True
 
-                # Add newly discovered link
                 if (
                     link
                     and not duplicate.link
                 ):
 
                     duplicate.link = link
+
                     changed = True
 
-                # Upgrade priority
                 if (
                     priority_value(priority)
                     > priority_value(duplicate.priority)
                 ):
 
                     duplicate.priority = priority
+
                     changed = True
 
-                # Add dependency
                 if (
                     previous_task_id
                     and not duplicate.depends_on
                 ):
 
                     duplicate.depends_on = previous_task_id
+
                     changed = True
 
                 if changed:
@@ -544,10 +481,6 @@ def analyze_context(request: ContextRequest):
 
                 continue
 
-            # -------------------------------------------------
-            # Dependency detection
-            # -------------------------------------------------
-
             depends_on = None
 
             sentence_lower = sentence.lower()
@@ -556,13 +489,12 @@ def analyze_context(request: ContextRequest):
                 sentence_lower.startswith("after ")
                 or "after completing" in sentence_lower
                 or "after finishing" in sentence_lower
+                or "after starting" in sentence_lower
+                or "before starting" in sentence_lower
             ):
-
                 depends_on = previous_task_id
 
-            # -------------------------------------------------
-            # Create new task
-            # -------------------------------------------------
+            task_info = classify_task(title)
 
             task = Task(
                 task_id=generate_task_id(),
@@ -573,8 +505,8 @@ def analyze_context(request: ContextRequest):
                 ),
                 deadline=deadline,
                 priority=priority,
-                category=classify_task(title)["category"],
-                confidence=classify_task(title)["confidence"],
+                category=task_info["category"],
+                confidence=task_info["confidence"],
                 status="READY",
                 source="ContextFlow Context Analyzer",
                 link=link,
@@ -601,9 +533,51 @@ def analyze_context(request: ContextRequest):
     }
 
 
-# ---------------------------------------------------------
-# Dashboard
-# ---------------------------------------------------------
+@app.post("/analyze-context")
+def analyze_context(request: ContextRequest):
+
+    return analyze_context_logic(
+        request.context
+    )
+
+
+@app.post("/analyze-context-extension")
+async def analyze_context_extension(request: Request):
+
+    try:
+
+        body = await request.json()
+
+        context = body.get(
+            "context",
+            ""
+        )
+
+    except Exception:
+
+        raw_body = await request.body()
+
+        try:
+
+            data = json.loads(
+                raw_body.decode("utf-8")
+            )
+
+            context = data.get(
+                "context",
+                ""
+            )
+
+        except Exception:
+
+            context = raw_body.decode(
+                "utf-8"
+            )
+
+    return analyze_context_logic(
+        context
+    )
+
 
 @app.get(
     "/dashboard",
@@ -629,10 +603,6 @@ def dashboard():
     )
 
 
-# ---------------------------------------------------------
-# Context page
-# ---------------------------------------------------------
-
 @app.get(
     "/context",
     response_class=HTMLResponse
@@ -642,7 +612,6 @@ def context_page():
     context_path = Path(
         "frontend/context.html"
     )
-    
 
     if not context_path.exists():
 
