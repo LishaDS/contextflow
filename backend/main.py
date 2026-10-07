@@ -1,28 +1,135 @@
-from backend.services.deadline_engine import (
-    get_deadline_status,
-    get_reminder_message,
-)
-
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, select
-from pydantic import BaseModel
-from datetime import datetime
-from pathlib import Path
+import asyncio
+import json
 import re
 import uuid
-import json
+from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from sqlmodel import Session, select
 
 from backend.database import engine, create_db_and_tables
 from backend.models import Task
-from backend.services.task_engine import classify_task
 from backend.reminders import router as reminder_router
+from backend.services.deadline_engine import (
+    get_deadline_status,
+    get_reminder_message,
+    get_deadline_priority,
+)
+from backend.services.task_engine import classify_task
+
+from backend.connectors.sync import sync_outlook_items
+from backend.connectors.teams_sync import sync_teams_items
+from backend.connectors.servicenow_sync import sync_servicenow_items
 
 
-app = FastAPI(title="ContextFlow API")
+# ---------------------------------------------------------
+# Automatic synchronization scheduler
+# ---------------------------------------------------------
 
-app.include_router(reminder_router)
+SYNC_INTERVAL_SECONDS = 60
+
+
+def run_all_syncs():
+
+    outlook_tasks = sync_outlook_items()
+
+    teams_tasks = sync_teams_items()
+
+    servicenow_tasks = sync_servicenow_items()
+
+    return {
+        "Outlook": len(outlook_tasks),
+        "Microsoft Teams": len(teams_tasks),
+        "ServiceNow": len(servicenow_tasks),
+        "created_tasks": (
+            outlook_tasks
+            + teams_tasks
+            + servicenow_tasks
+        ),
+    }
+
+
+async def automatic_sync_loop():
+
+    while True:
+
+        try:
+
+            result = await asyncio.to_thread(
+                run_all_syncs
+            )
+
+            print(
+                "[ContextFlow Scheduler] "
+                f"Sync completed: "
+                f"Outlook={result['Outlook']}, "
+                f"Teams={result['Microsoft Teams']}, "
+                f"ServiceNow={result['ServiceNow']}"
+            )
+
+        except Exception as e:
+
+            print(
+                "[ContextFlow Scheduler] "
+                f"Sync failed: {e}"
+            )
+
+        await asyncio.sleep(
+            SYNC_INTERVAL_SECONDS
+        )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    scheduler_task = asyncio.create_task(
+        automatic_sync_loop()
+    )
+
+    print(
+        "[ContextFlow Scheduler] "
+        "Automatic synchronization started."
+    )
+
+    try:
+
+        yield
+
+    finally:
+
+        scheduler_task.cancel()
+
+        try:
+
+            await scheduler_task
+
+        except asyncio.CancelledError:
+
+            print(
+                "[ContextFlow Scheduler] "
+                "Automatic synchronization stopped."
+            )
+
+
+# ---------------------------------------------------------
+# FastAPI application
+# ---------------------------------------------------------
+
+
+app = FastAPI(
+    title="ContextFlow API",
+    lifespan=lifespan
+)
+
+
+app.include_router(
+    reminder_router
+)
 
 
 app.add_middleware(
@@ -33,10 +140,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 create_db_and_tables()
 
 
+# ---------------------------------------------------------
+# Request models
+# ---------------------------------------------------------
+
+
 class TaskCreate(BaseModel):
+
     title: str
     description: str | None = None
     deadline: str | None = None
@@ -49,18 +163,48 @@ class TaskCreate(BaseModel):
 
 
 class ContextRequest(BaseModel):
+
     context: str
 
 
+class TaskStatusUpdate(BaseModel):
+
+    status: str
+
+
+# ---------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------
+
+
 def generate_task_id():
-    return "T-" + str(uuid.uuid4())[:8].upper()
+
+    return "T-" + str(
+        uuid.uuid4()
+    )[:8].upper()
 
 
 def normalize_title(title: str) -> str:
+
     title = title.lower().strip()
-    title = re.sub(r"^(please|kindly)\s+", "", title)
-    title = re.sub(r"[^\w\s]", "", title)
-    title = re.sub(r"\s+", " ", title).strip()
+
+    title = re.sub(
+        r"^(please|kindly)\s+",
+        "",
+        title
+    )
+
+    title = re.sub(
+        r"[^\w\s]",
+        "",
+        title
+    )
+
+    title = re.sub(
+        r"\s+",
+        " ",
+        title
+    ).strip()
 
     return title
 
@@ -69,7 +213,8 @@ def extract_date(text: str):
 
     pattern = (
         r"\b(January|February|March|April|May|June|July|August|"
-        r"September|October|November|December)\s+(\d{1,2})\b"
+        r"September|October|November|December)\s+(\d{1,2})"
+        r"(?:,\s*(\d{4}))?\b"
     )
 
     match = re.search(
@@ -79,18 +224,28 @@ def extract_date(text: str):
     )
 
     if not match:
+
         return None
+
+    year = match.group(3)
+
+    if not year:
+
+        year = "2026"
 
     try:
 
         date_obj = datetime.strptime(
-            f"{match.group(1)} {match.group(2)} 2026",
+            f"{match.group(1)} {match.group(2)} {year}",
             "%B %d %Y"
         )
 
-        return date_obj.strftime("%Y-%m-%d")
+        return date_obj.strftime(
+            "%Y-%m-%d"
+        )
 
     except ValueError:
+
         return None
 
 
@@ -102,9 +257,12 @@ def extract_url(text: str):
     )
 
     if not match:
+
         return None
 
-    return match.group(0).rstrip(".,)")
+    return match.group(0).rstrip(
+        ".,)"
+    )
 
 
 def is_supporting_sentence(sentence: str) -> bool:
@@ -122,6 +280,8 @@ def is_supporting_sentence(sentence: str) -> bool:
         "available here",
         "resources are",
         "resource is",
+        "required action:",
+        "applications:",
     ]
 
     sentence_lower = sentence.lower()
@@ -129,6 +289,7 @@ def is_supporting_sentence(sentence: str) -> bool:
     for phrase in supporting_phrases:
 
         if phrase in sentence_lower:
+
             return True
 
     return False
@@ -139,6 +300,7 @@ def is_action_sentence(sentence: str) -> bool:
     sentence_lower = sentence.lower().strip()
 
     if is_supporting_sentence(sentence):
+
         return False
 
     action_words = [
@@ -163,6 +325,26 @@ def is_action_sentence(sentence: str) -> bool:
         "study",
         "perform",
         "check",
+        "request",
+        "requested",
+        "required",
+        "renew",
+        "declare",
+        "enroll",
+        "enrollment",
+        "access",
+        "approval",
+        "approve",
+        "provide",
+        "confirm",
+        "update",
+        "verify",
+        "activate",
+        "configure",
+        "install",
+        "raise",
+        "raise a ticket",
+        "open",
     ]
 
     for word in action_words:
@@ -171,6 +353,7 @@ def is_action_sentence(sentence: str) -> bool:
             r"\b" + re.escape(word) + r"\b",
             sentence_lower
         ):
+
             return True
 
     return False
@@ -199,11 +382,13 @@ def detect_priority(text: str) -> str:
     for word in high_words:
 
         if word in text_lower:
+
             return "high"
 
     for word in low_words:
 
         if word in text_lower:
+
             return "low"
 
     return "medium"
@@ -215,12 +400,18 @@ def priority_value(priority: str) -> int:
         "low": 1,
         "medium": 2,
         "high": 3,
+        "critical": 4,
     }
 
     return values.get(
         priority.lower(),
         2
     )
+
+
+# ---------------------------------------------------------
+# Basic API
+# ---------------------------------------------------------
 
 
 @app.get("/")
@@ -231,8 +422,15 @@ def root():
     }
 
 
+# ---------------------------------------------------------
+# Task creation
+# ---------------------------------------------------------
+
+
 @app.post("/tasks")
-def create_task(task_data: TaskCreate):
+def create_task(
+    task_data: TaskCreate
+):
 
     task_id = generate_task_id()
 
@@ -261,6 +459,11 @@ def create_task(task_data: TaskCreate):
     return task
 
 
+# ---------------------------------------------------------
+# Get tasks
+# ---------------------------------------------------------
+
+
 @app.get("/tasks")
 def get_tasks():
 
@@ -276,14 +479,105 @@ def get_tasks():
 
         task_data = task.model_dump()
 
-        task_data["deadline_status"] = get_deadline_status(
+        task_data["deadline_status"] = (
+            get_deadline_status(
+                task.deadline,
+                task.status
+            )
+        )
+
+        task_data["reminder_message"] = (
+            get_reminder_message(
+                task.deadline,
+                task.status
+            )
+        )
+
+        dynamic_priority = get_deadline_priority(
             task.deadline,
             task.status
         )
 
-        task_data["reminder_message"] = get_reminder_message(
-            task.deadline,
-            task.status
+        if dynamic_priority:
+
+            if (
+                priority_value(dynamic_priority)
+                > priority_value(task.priority)
+            ):
+
+                task_data["effective_priority"] = (
+                    dynamic_priority
+                )
+
+            else:
+
+                task_data["effective_priority"] = (
+                    task.priority
+                )
+
+        else:
+
+            task_data["effective_priority"] = (
+                task.priority
+            )
+
+        priority_reasons = []
+
+        if task.priority.lower() == "critical":
+
+            priority_reasons.append(
+                "Task is explicitly marked critical"
+            )
+
+        elif task.priority.lower() == "high":
+
+            priority_reasons.append(
+                "Task is explicitly marked high priority"
+            )
+
+        elif task.priority.lower() == "low":
+
+            priority_reasons.append(
+                "Task is explicitly marked low priority"
+            )
+
+        if task.deadline:
+
+            if (
+                task_data["deadline_status"]
+                == "Overdue"
+            ):
+
+                priority_reasons.append(
+                    "Task is overdue"
+                )
+
+            elif (
+                task_data["deadline_status"]
+                == "Due Today"
+            ):
+
+                priority_reasons.append(
+                    "Deadline is today"
+                )
+
+            elif (
+                task_data["deadline_status"]
+                == "Due Soon"
+            ):
+
+                priority_reasons.append(
+                    "Deadline is within 2 days"
+                )
+
+        if not priority_reasons:
+
+            priority_reasons.append(
+                "No immediate urgency detected"
+            )
+
+        task_data["priority_reason"] = (
+            "; ".join(priority_reasons)
         )
 
         result.append(task_data)
@@ -291,8 +585,17 @@ def get_tasks():
     return result
 
 
-@app.patch("/tasks/{task_id}/complete")
-def complete_task(task_id: str):
+# ---------------------------------------------------------
+# Complete task
+# ---------------------------------------------------------
+
+
+@app.patch(
+    "/tasks/{task_id}/complete"
+)
+def complete_task(
+    task_id: str
+):
 
     with Session(engine) as session:
 
@@ -315,11 +618,17 @@ def complete_task(task_id: str):
                 task.depends_on
             )
 
-            if dependency and dependency.status != "COMPLETED":
+            if (
+                dependency
+                and dependency.status != "COMPLETED"
+            ):
 
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Task is blocked by {dependency.task_id}"
+                    detail=(
+                        f"Task is blocked by "
+                        f"{dependency.task_id}"
+                    )
                 )
 
         task.status = "COMPLETED"
@@ -333,7 +642,98 @@ def complete_task(task_id: str):
     return task
 
 
-def analyze_context_logic(context: str):
+# ---------------------------------------------------------
+# Task status
+# ---------------------------------------------------------
+
+
+@app.patch(
+    "/tasks/{task_id}/status"
+)
+def update_task_status(
+    task_id: str,
+    status_data: TaskStatusUpdate
+):
+
+    allowed_statuses = {
+        "READY",
+        "IN PROGRESS",
+        "BLOCKED",
+        "COMPLETED",
+    }
+
+    new_status = (
+        status_data.status
+        .strip()
+        .upper()
+    )
+
+    if new_status not in allowed_statuses:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Invalid status. Allowed statuses: "
+                "READY, IN PROGRESS, BLOCKED, COMPLETED"
+            )
+        )
+
+    with Session(engine) as session:
+
+        task = session.get(
+            Task,
+            task_id
+        )
+
+        if not task:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Task not found"
+            )
+
+        if (
+            new_status == "COMPLETED"
+            and task.depends_on
+        ):
+
+            dependency = session.get(
+                Task,
+                task.depends_on
+            )
+
+            if (
+                dependency
+                and dependency.status != "COMPLETED"
+            ):
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"Task is blocked by "
+                        f"{dependency.task_id}"
+                    )
+                )
+
+        task.status = new_status
+
+        session.add(task)
+
+        session.commit()
+
+        session.refresh(task)
+
+    return task
+
+
+# ---------------------------------------------------------
+# Context analysis
+# ---------------------------------------------------------
+
+
+def analyze_context_logic(
+    context: str
+):
 
     context = context.strip()
 
@@ -362,9 +762,12 @@ def analyze_context_logic(context: str):
             sentence = sentence.strip()
 
             if not sentence:
+
                 continue
 
-            if is_supporting_sentence(sentence):
+            if is_supporting_sentence(
+                sentence
+            ):
 
                 if previous_task_id:
 
@@ -390,7 +793,9 @@ def analyze_context_logic(context: str):
                             and not previous_task.deadline
                         ):
 
-                            previous_task.deadline = deadline
+                            previous_task.deadline = (
+                                deadline
+                            )
 
                             changed = True
 
@@ -417,7 +822,9 @@ def analyze_context_logic(context: str):
 
                 continue
 
-            if not is_action_sentence(sentence):
+            if not is_action_sentence(
+                sentence
+            ):
 
                 continue
 
@@ -435,8 +842,8 @@ def analyze_context_logic(context: str):
                 sentence
             )
 
-            normalized_new_title = normalize_title(
-                title
+            normalized_new_title = (
+                normalize_title(title)
             )
 
             existing_tasks = session.exec(
@@ -448,7 +855,9 @@ def analyze_context_logic(context: str):
             for existing in existing_tasks:
 
                 if (
-                    normalize_title(existing.title)
+                    normalize_title(
+                        existing.title
+                    )
                     == normalized_new_title
                 ):
 
@@ -480,7 +889,9 @@ def analyze_context_logic(context: str):
 
                 if (
                     priority_value(priority)
-                    > priority_value(duplicate.priority)
+                    > priority_value(
+                        duplicate.priority
+                    )
                 ):
 
                     duplicate.priority = priority
@@ -492,7 +903,9 @@ def analyze_context_logic(context: str):
                     and not duplicate.depends_on
                 ):
 
-                    duplicate.depends_on = previous_task_id
+                    duplicate.depends_on = (
+                        previous_task_id
+                    )
 
                     changed = True
 
@@ -512,25 +925,35 @@ def analyze_context_logic(context: str):
                     duplicate
                 )
 
-                previous_task_id = duplicate.task_id
+                previous_task_id = (
+                    duplicate.task_id
+                )
 
                 continue
 
             depends_on = None
 
-            sentence_lower = sentence.lower()
+            sentence_lower = (
+                sentence.lower()
+            )
 
             if (
                 sentence_lower.startswith("after ")
-                or "after completing" in sentence_lower
-                or "after finishing" in sentence_lower
-                or "after starting" in sentence_lower
-                or "before starting" in sentence_lower
+                or "after completing"
+                in sentence_lower
+                or "after finishing"
+                in sentence_lower
+                or "after starting"
+                in sentence_lower
+                or "before starting"
+                in sentence_lower
             ):
 
                 depends_on = previous_task_id
 
-            task_info = classify_task(title)
+            task_info = classify_task(
+                title
+            )
 
             task = Task(
                 task_id=generate_task_id(),
@@ -544,7 +967,9 @@ def analyze_context_logic(context: str):
                 category=task_info["category"],
                 confidence=task_info["confidence"],
                 status="READY",
-                source="ContextFlow Context Analyzer",
+                source=(
+                    "ContextFlow Context Analyzer"
+                ),
                 link=link,
                 depends_on=depends_on,
             )
@@ -555,14 +980,14 @@ def analyze_context_logic(context: str):
 
             session.refresh(task)
 
-            created_tasks.append(
-                task
-            )
+            created_tasks.append(task)
 
             previous_task_id = task.task_id
 
     return {
-        "message": "Context analyzed successfully",
+        "message": (
+            "Context analyzed successfully"
+        ),
         "created_tasks": created_tasks,
         "duplicate_tasks": duplicate_tasks,
         "tasks": created_tasks,
@@ -570,15 +995,21 @@ def analyze_context_logic(context: str):
 
 
 @app.post("/analyze-context")
-def analyze_context(request: ContextRequest):
+def analyze_context(
+    request: ContextRequest
+):
 
     return analyze_context_logic(
         request.context
     )
 
 
-@app.post("/analyze-context-extension")
-async def analyze_context_extension(request: Request):
+@app.post(
+    "/analyze-context-extension"
+)
+async def analyze_context_extension(
+    request: Request
+):
 
     try:
 
@@ -613,6 +1044,91 @@ async def analyze_context_extension(request: Request):
     return analyze_context_logic(
         context
     )
+
+
+# ---------------------------------------------------------
+# Manual synchronization endpoints
+# ---------------------------------------------------------
+
+
+@app.post("/sync/outlook")
+def sync_outlook():
+
+    created_tasks = sync_outlook_items()
+
+    return {
+        "message": (
+            "Outlook synchronization completed"
+        ),
+        "created_tasks": created_tasks,
+        "created_count": len(
+            created_tasks
+        ),
+    }
+
+
+@app.post("/sync/teams")
+def sync_teams():
+
+    created_tasks = sync_teams_items()
+
+    return {
+        "message": (
+            "Microsoft Teams synchronization completed"
+        ),
+        "created_tasks": created_tasks,
+        "created_count": len(
+            created_tasks
+        ),
+    }
+
+
+@app.post("/sync/servicenow")
+def sync_servicenow():
+
+    created_tasks = sync_servicenow_items()
+
+    return {
+        "message": (
+            "ServiceNow synchronization completed"
+        ),
+        "created_tasks": created_tasks,
+        "created_count": len(
+            created_tasks
+        ),
+    }
+
+
+@app.post("/sync/all")
+def sync_all():
+
+    result = run_all_syncs()
+
+    return {
+        "message": (
+            "ContextFlow synchronization completed"
+        ),
+        "created_tasks": result[
+            "created_tasks"
+        ],
+        "created_count": len(
+            result["created_tasks"]
+        ),
+        "sources": {
+            "Outlook": result["Outlook"],
+            "Microsoft Teams": result[
+                "Microsoft Teams"
+            ],
+            "ServiceNow": result[
+                "ServiceNow"
+            ],
+        },
+    }
+
+
+# ---------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------
 
 
 @app.get(
@@ -658,6 +1174,60 @@ def context_page():
 
     return HTMLResponse(
         context_path.read_text(
+            encoding="utf-8"
+        )
+    )
+
+
+# ---------------------------------------------------------
+# ContextFlow realistic enterprise demo pages
+# ---------------------------------------------------------
+
+
+MOCK_SITE_NAMES = {
+    "outlook",
+    "teams",
+    "outlook-security",
+    "outlook-epfo",
+    "teams-assessment",
+    "servicenow",
+    "access-request",
+    "hr-benefits",
+    "security-training",
+    "epfo",
+    "cloud-assessment",
+    "servicenow-form",
+    "access-request-form",
+    "benefits-form",
+}
+
+
+@app.get(
+    "/mock/{site}",
+    response_class=HTMLResponse
+)
+def mock_site(site: str):
+
+    if site not in MOCK_SITE_NAMES:
+
+        return HTMLResponse(
+            "<h1>Demo page not found</h1>",
+            status_code=404
+        )
+
+    mock_path = Path(
+        "frontend/mock_sites.html"
+    )
+
+    if not mock_path.exists():
+
+        return HTMLResponse(
+            "<h1>Mock sites file not found</h1>",
+            status_code=404
+        )
+
+    return HTMLResponse(
+        mock_path.read_text(
             encoding="utf-8"
         )
     )

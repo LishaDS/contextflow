@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "ContextFlow",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Capture selected context and turn it into actionable tasks.",
   "permissions": [
     "activeTab",
     "storage",
     "contextMenus",
-    "notifications"
+    "notifications",
+    "alarms"
   ],
   "host_permissions": [
     "https://bookish-barnacle-jjr55rjwv4v2pv9-8000.app.github.dev/*"

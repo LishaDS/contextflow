@@ -2,3 +2,4 @@ contextflow.db
 __pycache__/
 *.pyc
 task.status
+contextflow_backup.db

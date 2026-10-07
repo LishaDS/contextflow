@@ -76,6 +76,26 @@ h1 {
     margin: 7px 0;
 }
 
+.priority {
+    font-weight: bold;
+}
+
+.priority-critical {
+    color: #b00020;
+}
+
+.priority-high {
+    color: #d35400;
+}
+
+.priority-medium {
+    color: #9a7d00;
+}
+
+.priority-low {
+    color: #2e7d32;
+}
+
 button {
     padding: 9px 14px;
     border: none;
@@ -84,6 +104,23 @@ button {
     margin-top: 10px;
     background: #222;
     color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.status-select {
+    padding: 8px 10px;
+    border-radius: 7px;
+    border: 1px solid #ccc;
+    background: white;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.status-label {
+    font-weight: bold;
 }
 
 .source-link {
@@ -103,6 +140,19 @@ button {
 .error {
     color: #b00020;
     font-weight: bold;
+}
+
+.priority-reason {
+    background: #f7f8fa;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-top: 5px;
+}
+
+.status-message {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #666;
 }
 
 @media (max-width: 800px) {
@@ -169,7 +219,14 @@ AI-powered Context-to-Workflow Automation
     <button onclick="filterTasks('HIGH')" style="margin-left:8px;">
         High Priority
     </button>
-    <input id="taskSearch" type="text" placeholder="Search tasks..." oninput="searchTasks()" style="margin-left:8px; padding:8px;">
+
+    <input
+        id="taskSearch"
+        type="text"
+        placeholder="Search tasks..."
+        oninput="searchTasks()"
+        style="margin-left:8px; padding:8px;"
+    >
 
 </div>
 
@@ -185,14 +242,57 @@ Loading tasks...
 
 let allTasks = [];
 
+
+function getEffectivePriority(task) {
+
+    return (
+        task.effective_priority ||
+        task.priority ||
+        "medium"
+    ).toLowerCase();
+
+}
+
+
 function searchTasks() {
-    const query = document.getElementById("taskSearch").value.toLowerCase().trim();
+
+    const query =
+        document
+            .getElementById("taskSearch")
+            .value
+            .toLowerCase()
+            .trim();
 
     const filtered = allTasks.filter(task =>
-        task.title.toLowerCase().includes(query) ||
-        (task.category || "").toLowerCase().includes(query) ||
-        (task.priority || "").toLowerCase().includes(query) ||
-        (task.status || "").toLowerCase().includes(query)
+
+        (task.title || "")
+            .toLowerCase()
+            .includes(query)
+
+        ||
+
+        (task.category || "")
+            .toLowerCase()
+            .includes(query)
+
+        ||
+
+        (task.priority || "")
+            .toLowerCase()
+            .includes(query)
+
+        ||
+
+        (task.effective_priority || "")
+            .toLowerCase()
+            .includes(query)
+
+        ||
+
+        (task.status || "")
+            .toLowerCase()
+            .includes(query)
+
     );
 
     renderTasks(filtered);
@@ -221,11 +321,17 @@ function filterTasks(filter) {
 
     if (filter === "HIGH") {
 
-        filtered = allTasks.filter(
-            task =>
-                task.priority &&
-                task.priority.toLowerCase() === "high"
-        );
+        filtered = allTasks.filter(task => {
+
+            const priority =
+                getEffectivePriority(task);
+
+            return (
+                priority === "high" ||
+                priority === "critical"
+            );
+
+        });
 
     }
 
@@ -233,17 +339,54 @@ function filterTasks(filter) {
 }
 
 
+function getPriorityClass(priority) {
+
+    if (priority === "critical") {
+        return "priority-critical";
+    }
+
+    if (priority === "high") {
+        return "priority-high";
+    }
+
+    if (priority === "medium") {
+        return "priority-medium";
+    }
+
+    return "priority-low";
+}
+
+
 function renderTasks(tasks) {
 
-    const container = document.getElementById("tasks");
+    const container =
+        document.getElementById("tasks");
 
     container.innerHTML = "";
 
+    if (!tasks || tasks.length === 0) {
+
+        container.innerHTML =
+            '<div class="empty">No tasks found.</div>';
+
+        return;
+    }
+
     tasks.forEach(task => {
 
-        const card = document.createElement("div");
+        const card =
+            document.createElement("div");
 
         card.className = "task-card";
+
+        const priority =
+            getEffectivePriority(task);
+
+        const priorityClass =
+            getPriorityClass(priority);
+
+        const currentStatus =
+            task.status || "READY";
 
         card.innerHTML = `
 
@@ -265,9 +408,15 @@ function renderTasks(tasks) {
                 ${task.deadline || "Not specified"}
             </div>
 
-            <div class="detail">
-                <strong>Priority:</strong>
-                ${task.priority}
+            <div class="detail priority ${priorityClass}">
+                <strong>Effective Priority:</strong>
+                ${priority.toUpperCase()}
+            </div>
+
+            <div class="detail priority-reason">
+                <strong>Why this priority?</strong>
+                ${task.priority_reason ||
+                  "Priority determined from task urgency and available task information."}
             </div>
 
             <div class="detail">
@@ -277,14 +426,55 @@ function renderTasks(tasks) {
 
             <div class="detail">
                 <strong>AI Confidence:</strong>
-                ${task.confidence != null
+                ${
+                    task.confidence != null
                     ? Math.round(task.confidence * 100) + "%"
-                    : "Not available"}
+                    : "Not available"
+                }
             </div>
 
             <div class="detail">
-                <strong>Status:</strong>
-                ${task.status}
+                <span class="status-label">Status:</span>
+
+                <select
+                    class="status-select"
+                    onchange="updateTaskStatus(
+                        '${task.task_id}',
+                        this.value
+                    )"
+                >
+
+                    <option value="READY"
+                        ${currentStatus === "READY" ? "selected" : ""}>
+                        READY
+                    </option>
+
+                    <option value="IN PROGRESS"
+                        ${currentStatus === "IN PROGRESS" ? "selected" : ""}>
+                        IN PROGRESS
+                    </option>
+
+                    <option value="BLOCKED"
+                        ${currentStatus === "BLOCKED" ? "selected" : ""}>
+                        BLOCKED
+                    </option>
+
+                    <option value="COMPLETED"
+                        ${currentStatus === "COMPLETED" ? "selected" : ""}>
+                        COMPLETED
+                    </option>
+
+                </select>
+            </div>
+
+            <div class="detail">
+                <strong>Deadline Status:</strong>
+                ${task.deadline_status || "No deadline"}
+            </div>
+
+            <div class="detail">
+                <strong>Reminder:</strong>
+                ${task.reminder_message || "No reminder"}
             </div>
 
             <div class="detail">
@@ -294,162 +484,127 @@ function renderTasks(tasks) {
 
         `;
 
+        if (task.status === "COMPLETED") {
+
+            card.innerHTML +=
+                '<div style="margin-top:10px;">✅ Task Completed</div>';
+
+        } else {
+
+            card.innerHTML += `
+
+                <button
+                    onclick="completeTask('${task.task_id}')">
+                    ✓ Complete Task
+                </button>
+
+            `;
+
+        }
+
+        if (task.link) {
+
+            card.innerHTML += `
+
+                <a
+                    class="source-link"
+                    href="${task.link}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+
+                    🔗 Open Source
+
+                </a>
+
+            `;
+
+        }
+
         container.appendChild(card);
 
     });
+
+}
+
+
+async function updateTaskStatus(taskId, newStatus) {
+
+    try {
+
+        const response =
+            await fetch(
+                `/tasks/${taskId}/status`,
+                {
+                    method: "PATCH",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                }
+            );
+
+        if (!response.ok) {
+
+            const error =
+                await response.json();
+
+            alert(
+                error.detail ||
+                "Unable to update task status."
+            );
+
+            await loadTasks();
+
+            return;
+        }
+
+        await loadTasks();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Could not connect to ContextFlow backend."
+        );
+
+        await loadTasks();
+
+    }
+
 }
 
 
 async function loadTasks() {
 
-    const container = document.getElementById("tasks");
+    const container =
+        document.getElementById("tasks");
 
     try {
 
-        const response = await fetch("/tasks");
+        const response =
+            await fetch("/tasks");
 
         if (!response.ok) {
 
-            throw new Error("Failed to load tasks");
+            throw new Error(
+                "Failed to load tasks"
+            );
 
         }
 
-        const tasks = await response.json();
+        const tasks =
+            await response.json();
 
         allTasks = tasks;
 
         updateSummary(tasks);
 
-        if (!tasks || tasks.length === 0) {
-
-            container.innerHTML =
-                '<div class="empty">No tasks found.</div>';
-
-            return;
-
-        }
-
-        container.innerHTML = "";
-
-        tasks.forEach(task => {
-
-            const card = document.createElement("div");
-
-            card.className = "task-card";
-
-            const deadline =
-                task.deadline || "Not specified";
-
-            let dependency = "None";
-
-if (task.depends_on) {
-    const dependencyTask = allTasks.find(
-        t => t.task_id === task.depends_on
-    );
-
-    if (dependencyTask) {
-        dependency = dependencyTask.title;
-    }
-}
-
-           let deadlineStatus = task.deadline_status || "No deadline";
-
-            const category =
-                task.category || "general";
-
-            const confidence =
-                task.confidence != null
-                    ? Math.round(task.confidence * 100) + "%"
-                    : "Not available";
-
-            let action = "";
-
-            if (task.status === "COMPLETED") {
-
-                action =
-                    '<div style="margin-top:10px;">✅ Task Completed</div>';
-
-            } else {
-
-                action = `
-                    <button onclick="completeTask('${task.task_id}')">
-                        ✓ Complete Task
-                    </button>
-                `;
-
-            }
-
-            const link = task.link
-                ? `
-                    <a
-                        class="source-link"
-                        href="${task.link}"
-                        target="_blank"
-                        rel="noopener noreferrer">
-                        🔗 Open Source
-                    </a>
-                  `
-                : "";
-
-            card.innerHTML = `
-
-                <div class="task-title">
-                    ${task.title}
-                </div>
-
-                <div class="task-id">
-                    Task ID: ${task.task_id}
-                </div>
-
-                <div class="detail">
-                    <strong>Description:</strong>
-                    ${task.description || "Not specified"}
-                </div>
-
-                <div class="detail">
-                    <strong>Deadline:</strong>
-                    ${deadline}
-                </div>
-
-                <div class="detail">
-                    <strong>Priority:</strong>
-                    ${task.priority}
-                </div>
-
-                <div class="detail">
-                    <strong>Category:</strong>
-                    ${category}
-                </div>
-
-                <div class="detail">
-                    <strong>AI Confidence:</strong>
-                    ${confidence}
-                </div>
-
-                <div class="detail">
-                    <strong>Status:</strong>
-                    ${task.status}
-                </div>
-
-                <div class="detail">
-                    <strong>Deadline Status:</strong>
-                    ${deadlineStatus}
-                </div>
-
-                <div class="detail">
-                    <strong>Dependency:</strong>
-                    ${dependency}
-                </div>
-
-                ${action}
-
-                ${link}
-
-            `;
-
-            container.appendChild(card);
-
-        });
+        renderTasks(tasks);
 
     } catch (error) {
 
@@ -459,54 +614,89 @@ if (task.depends_on) {
             '<div class="error">Unable to load tasks. Please check whether the backend is running.</div>';
 
     }
+
 }
 
 
 function updateSummary(tasks) {
 
-    const total = tasks.length;
+    const total =
+        tasks.length;
 
     const completed =
         tasks.filter(
-            task => task.status === "COMPLETED"
+            task =>
+                task.status === "COMPLETED"
         ).length;
 
     const pending =
         tasks.filter(
-            task => task.status !== "COMPLETED"
-        ).length;
-
-    const high =
-        tasks.filter(
             task =>
-                task.priority &&
-                task.priority.toLowerCase() === "high" &&
                 task.status !== "COMPLETED"
         ).length;
 
-    const today = new Date();
+    const high =
+        tasks.filter(task => {
+
+            const priority =
+                getEffectivePriority(task);
+
+            return (
+                (
+                    priority === "high" ||
+                    priority === "critical"
+                )
+                &&
+                task.status !== "COMPLETED"
+            );
+
+        }).length;
+
+    const today =
+        new Date();
 
     const upcoming =
-        tasks.filter(
-            task =>
-                task.deadline &&
-                task.status !== "COMPLETED" &&
-                new Date(task.deadline + "T23:59:59") >= today
+        tasks.filter(task =>
+
+            task.deadline
+
+            &&
+
+            task.status !== "COMPLETED"
+
+            &&
+
+            new Date(
+                task.deadline + "T23:59:59"
+            ) >= today
+
         ).length;
 
-    document.getElementById("totalTasks").textContent = total;
 
-    document.getElementById("completedTasks").textContent =
-        completed;
+    document.getElementById(
+        "totalTasks"
+    ).textContent = total;
 
-    document.getElementById("pendingTasks").textContent =
-        pending;
 
-    document.getElementById("highTasks").textContent =
-        high;
+    document.getElementById(
+        "completedTasks"
+    ).textContent = completed;
 
-    document.getElementById("upcomingTasks").textContent =
-        upcoming;
+
+    document.getElementById(
+        "pendingTasks"
+    ).textContent = pending;
+
+
+    document.getElementById(
+        "highTasks"
+    ).textContent = high;
+
+
+    document.getElementById(
+        "upcomingTasks"
+    ).textContent = upcoming;
+
 }
 
 
@@ -514,16 +704,18 @@ async function completeTask(taskId) {
 
     try {
 
-        const response = await fetch(
-            `/tasks/${taskId}/complete`,
-            {
-                method: "PATCH"
-            }
-        );
+        const response =
+            await fetch(
+                `/tasks/${taskId}/complete`,
+                {
+                    method: "PATCH"
+                }
+            );
 
         if (!response.ok) {
 
-            const error = await response.json();
+            const error =
+                await response.json();
 
             alert(
                 error.detail ||
@@ -545,6 +737,7 @@ async function completeTask(taskId) {
         );
 
     }
+
 }
 
 

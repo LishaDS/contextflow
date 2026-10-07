@@ -1,0 +1,4715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>ContextFlow Enterprise Demo</title>
+
+
+<style>
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background: #f4f6f8;
+
+    color: #172033;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+.topbar {
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 28px;
+
+    color: white;
+
+    font-size: 21px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.12);
+
+    position: relative;
+
+    z-index: 10;
+}
+
+.topbar span {
+    margin-left: auto;
+
+    font-size: 12px;
+
+    font-weight: 400;
+
+    opacity: 0.85;
+}
+
+
+/* Outlook */
+
+.outlook-topbar {
+    background: #0f6cbd;
+}
+
+
+/* Teams */
+
+.teams-topbar {
+    background: #4b3ca7;
+}
+
+
+/* ServiceNow */
+
+.servicenow-topbar {
+    background: #17365d;
+}
+
+
+/* Action pages */
+
+.action-topbar {
+    background: #17365d;
+}
+
+
+/* =========================================================
+   APPLICATION LAYOUT
+   ========================================================= */
+
+.app-layout {
+    display: flex;
+
+    min-height:
+        calc(100vh - 64px);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+    width: 235px;
+
+    flex-shrink: 0;
+
+    background: white;
+
+    border-right:
+        1px solid #dfe4ea;
+
+    padding: 20px 14px;
+}
+
+.sidebar-title {
+    padding:
+        8px 12px 18px;
+
+    font-size: 17px;
+
+    font-weight: 700;
+}
+
+.sidebar-item {
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
+    padding:
+        11px 13px;
+
+    margin-bottom: 4px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #334155;
+
+    text-align: left;
+
+    font-size: 14px;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.sidebar-item:hover {
+    background: #f1f5f9;
+}
+
+.outlook-sidebar
+.sidebar-item.active {
+    background: #e8f3ff;
+
+    color: #0f6cbd;
+
+    font-weight: 700;
+}
+
+.teams-sidebar
+.sidebar-item.active {
+    background: #eeeafd;
+
+    color: #4b3ca7;
+
+    font-weight: 700;
+}
+
+.servicenow-sidebar
+.sidebar-item.active {
+    background: #e8f0f8;
+
+    color: #17365d;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.app-main {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 28px;
+}
+
+.card {
+    background: white;
+
+    border:
+        1px solid #dfe4ea;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 14px rgba(15, 23, 42, 0.06);
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
+.badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.badge-blue {
+    background: #e8f3ff;
+    color: #0f6cbd;
+}
+
+.badge-purple {
+    background: #eeeafd;
+    color: #4b3ca7;
+}
+
+.badge-green {
+    background: #e7f7ed;
+    color: #18794e;
+}
+
+.badge-orange {
+    background: #fff2df;
+    color: #a65f00;
+}
+
+.badge-red {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.badge-gray {
+    background: #eef1f4;
+    color: #475569;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.action-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        11px 18px;
+
+    border-radius: 7px;
+
+    color: white;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    border: none;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.action-button:hover {
+    opacity: 0.92;
+
+    transform:
+        translateY(-1px);
+}
+
+.blue-button {
+    background: #0f6cbd;
+}
+
+.purple-button {
+    background: #4b3ca7;
+}
+
+.navy-button {
+    background: #17365d;
+}
+
+.gray-button {
+    background: #64748b;
+}
+
+
+/* =========================================================
+   INFO BOX
+   ========================================================= */
+
+.info-box {
+    padding: 16px;
+
+    margin:
+        18px 0;
+
+    border-radius: 8px;
+
+    background: #eff6ff;
+
+    border-left:
+        4px solid #0f6cbd;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   OUTLOOK
+   ========================================================= */
+
+.outlook-main {
+    display: flex;
+
+    height:
+        calc(100vh - 120px);
+
+    min-height: 650px;
+}
+
+.outlook-message-list {
+    width: 335px;
+
+    flex-shrink: 0;
+
+    background: white;
+
+    border-right:
+        1px solid #dfe4ea;
+
+    overflow-y: auto;
+}
+
+.outlook-list-header {
+    padding: 20px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.outlook-list-header h2 {
+    margin: 0;
+
+    font-size: 19px;
+}
+
+.outlook-list-header p {
+    margin:
+        5px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.email-item {
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-bottom:
+        1px solid #edf0f3;
+
+    background: white;
+
+    text-align: left;
+
+    transition:
+        background 0.15s ease;
+}
+
+.email-item:hover {
+    background: #f8fbff;
+}
+
+.email-item.selected {
+    background: #eaf4ff;
+
+    border-left:
+        4px solid #0f6cbd;
+
+    padding-left: 12px;
+}
+
+.email-sender {
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: #1e293b;
+}
+
+.email-subject {
+    margin-top: 6px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #334155;
+}
+
+.email-preview {
+    margin-top: 6px;
+
+    font-size: 12px;
+
+    color: #64748b;
+
+    line-height: 1.45;
+}
+
+.email-date {
+    margin-top: 8px;
+
+    font-size: 11px;
+
+    color: #94a3b8;
+}
+
+.email-view {
+    flex: 1;
+
+    min-width: 0;
+
+    background: white;
+
+    overflow-y: auto;
+}
+
+.email-view-header {
+    padding:
+        28px 32px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.email-view-header h1 {
+    margin: 0;
+
+    font-size: 23px;
+
+    line-height: 1.35;
+}
+
+.email-meta {
+    margin-top: 20px;
+
+    display: grid;
+
+    gap: 9px;
+
+    font-size: 13px;
+
+    color: #475569;
+}
+
+.email-meta-row {
+    display: flex;
+}
+
+.email-label {
+    width: 65px;
+
+    flex-shrink: 0;
+
+    color: #94a3b8;
+}
+
+.email-body {
+    padding:
+        30px 32px;
+
+    max-width: 900px;
+
+    font-size: 15px;
+
+    line-height: 1.75;
+}
+
+.email-body p {
+    margin:
+        0 0 18px;
+}
+
+.outlook-action-area {
+    margin-top: 25px;
+
+    padding-top: 22px;
+
+    border-top:
+        1px solid #e5e7eb;
+}
+
+
+/* =========================================================
+   TEAMS
+   ========================================================= */
+
+.teams-main {
+    display: flex;
+
+    height:
+        calc(100vh - 64px);
+
+    min-height: 650px;
+}
+
+.teams-chat-list {
+    width: 320px;
+
+    flex-shrink: 0;
+
+    background: white;
+
+    border-right:
+        1px solid #dfe4ea;
+
+    overflow-y: auto;
+}
+
+.teams-list-header {
+    padding: 20px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.teams-list-header h2 {
+    margin: 0;
+
+    font-size: 19px;
+}
+
+.teams-list-header p {
+    margin:
+        5px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.teams-message-item {
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-bottom:
+        1px solid #edf0f3;
+
+    background: white;
+
+    text-align: left;
+}
+
+.teams-message-item:hover {
+    background: #faf9ff;
+}
+
+.teams-message-item.selected {
+    background: #eeeafd;
+
+    border-left:
+        4px solid #4b3ca7;
+
+    padding-left: 12px;
+}
+
+.teams-message-sender {
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+.teams-message-subject {
+    margin-top: 5px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.teams-message-preview {
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+
+    color: #64748b;
+}
+
+.teams-content {
+    flex: 1;
+
+    min-width: 0;
+
+    overflow-y: auto;
+
+    background: #f7f6fb;
+}
+
+.teams-header {
+    padding:
+        22px 30px;
+
+    background: white;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.teams-header h1 {
+    margin: 0;
+
+    font-size: 22px;
+}
+
+.teams-header p {
+    margin:
+        5px 0 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.teams-message-card {
+    max-width: 850px;
+
+    margin:
+        30px auto;
+
+    background: white;
+
+    border:
+        1px solid #e2e0ed;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 12px rgba(40, 30, 80, 0.05);
+
+    padding: 26px;
+}
+
+.profile {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #4b3ca7;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 14px;
+
+    font-weight: 700;
+}
+
+.profile-name {
+    font-size: 14px;
+
+    font-weight: 700;
+}
+
+.profile-channel {
+    margin-top: 3px;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.message-subject {
+    margin: 0;
+
+    font-size: 21px;
+}
+
+.message-date {
+    margin-top: 7px;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+.message-bubble {
+    margin-top: 22px;
+
+    padding: 18px;
+
+    border-radius: 10px;
+
+    background: #f5f3fc;
+
+    border-left:
+        4px solid #4b3ca7;
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+.teams-action-area {
+    margin-top: 22px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid #e5e7eb;
+}
+
+.teams-section-card {
+    max-width: 900px;
+
+    margin:
+        30px auto;
+
+    background: white;
+
+    border:
+        1px solid #e2e0ed;
+
+    border-radius: 12px;
+
+    padding: 28px;
+
+    box-shadow:
+        0 3px 12px rgba(40, 30, 80, 0.04);
+}
+
+.teams-section-card h1 {
+    margin: 0;
+
+    font-size: 22px;
+}
+
+.teams-section-card > p {
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+.calendar-event,
+.call-row,
+.file-row {
+    padding: 16px;
+
+    margin-top: 10px;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 8px;
+
+    background: #fafbfc;
+}
+
+
+/* =========================================================
+   SERVICENOW
+   ========================================================= */
+
+.servicenow-content {
+    flex: 1;
+
+    overflow-y: auto;
+
+    background: #f4f6f8;
+
+    padding: 30px;
+}
+
+.servicenow-header {
+    max-width: 1050px;
+
+    margin:
+        0 auto 22px;
+}
+
+.servicenow-header h1 {
+    margin: 0;
+
+    font-size: 25px;
+}
+
+.servicenow-header p {
+    margin:
+        6px 0 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+.servicenow-toolbar {
+    max-width: 1050px;
+
+    margin:
+        0 auto 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+.servicenow-count {
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.ticket-grid {
+    max-width: 1050px;
+
+    margin: auto;
+
+    display: grid;
+
+    gap: 16px;
+}
+
+.ticket-card {
+    background: white;
+
+    border:
+        1px solid #dce2e8;
+
+    border-radius: 10px;
+
+    padding: 21px;
+
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.ticket-header {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+.ticket-number {
+    font-size: 12px;
+
+    color: #64748b;
+
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+}
+
+.ticket-title {
+    margin-top: 5px;
+
+    font-size: 17px;
+
+    font-weight: 700;
+}
+
+.ticket-description {
+    margin:
+        15px 0;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    color: #334155;
+}
+
+.ticket-meta {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(130px, 1fr));
+
+    gap: 15px;
+
+    padding-top: 15px;
+
+    border-top:
+        1px solid #edf0f3;
+}
+
+.meta-label {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 11px;
+
+    color: #94a3b8;
+
+    text-transform: uppercase;
+}
+
+.meta-value {
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #334155;
+}
+
+.ticket-action {
+    margin-top: 18px;
+}
+
+
+/* ServiceNow detail */
+
+.ticket-detail {
+    max-width: 1050px;
+
+    margin: auto;
+}
+
+.ticket-detail-card {
+    background: white;
+
+    border:
+        1px solid #dce2e8;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 14px rgba(15, 23, 42, 0.06);
+
+    overflow: hidden;
+}
+
+.ticket-detail-header {
+    padding: 25px 28px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.ticket-detail-number {
+    color: #64748b;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.ticket-detail-title {
+    margin-top: 6px;
+
+    font-size: 23px;
+
+    font-weight: 700;
+}
+
+.ticket-detail-body {
+    padding: 28px;
+}
+
+.ticket-detail-description {
+    padding:
+        18px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    border-left:
+        4px solid #17365d;
+
+    line-height: 1.7;
+
+    font-size: 14px;
+}
+
+.detail-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 16px;
+
+    margin-top: 22px;
+}
+
+.detail-box {
+    padding: 16px;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 8px;
+
+    background: white;
+}
+
+.detail-box-label {
+    display: block;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    margin-bottom: 6px;
+}
+
+.detail-box-value {
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.detail-actions {
+    margin-top: 25px;
+
+    padding-top: 22px;
+
+    border-top:
+        1px solid #e5e7eb;
+
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   ACTION PAGES
+   ========================================================= */
+
+.action-page {
+    min-height:
+        calc(100vh - 64px);
+
+    padding: 35px;
+
+    background: #f4f6f8;
+}
+
+.action-card {
+    max-width: 850px;
+
+    margin: auto;
+
+    background: white;
+
+    border:
+        1px solid #dfe4ea;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 14px rgba(15, 23, 42, 0.06);
+
+    overflow: hidden;
+}
+
+.action-card-header {
+    padding:
+        24px 28px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.action-card-header h1 {
+    margin: 0;
+
+    font-size: 23px;
+}
+
+.action-card-header p {
+    margin:
+        6px 0 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+.action-card-body {
+    padding: 28px;
+}
+
+.form-row {
+    margin-bottom: 18px;
+}
+
+.form-row label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: #334155;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+    width: 100%;
+
+    padding:
+        11px 12px;
+
+    border:
+        1px solid #cbd5e1;
+
+    border-radius: 7px;
+
+    background: white;
+
+    font-size: 14px;
+
+    color: #172033;
+}
+
+.form-row textarea {
+    min-height: 110px;
+
+    resize: vertical;
+}
+
+.success {
+    display: none;
+
+    margin-top: 18px;
+
+    padding: 14px;
+
+    border-radius: 8px;
+
+    background: #e7f7ed;
+
+    border:
+        1px solid #b7e4c7;
+
+    color: #18794e;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .outlook-message-list,
+    .teams-chat-list {
+        width: 280px;
+    }
+
+    .ticket-meta {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .detail-grid {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .app-main,
+    .servicenow-content,
+    .action-page {
+        padding: 15px;
+    }
+
+    .outlook-message-list,
+    .teams-chat-list {
+        display: none;
+    }
+
+    .email-view {
+        min-height:
+            calc(100vh - 64px);
+    }
+
+    .ticket-meta,
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div id="app"></div>
+
+
+<script>
+
+
+/* =========================================================
+   OUTLOOK EMAILS
+   ========================================================= */
+
+const outlookEmails = {
+
+    security: {
+
+        sender:
+            "Kyndryl Onboarding",
+
+        subject:
+            "Mandatory Security Training",
+
+        preview:
+            "Please complete the mandatory security awareness training...",
+
+        date:
+            "October 5, 2026",
+
+        to:
+            "Lisha D S",
+
+        body: `
+
+            <p>Hello,</p>
+
+            <p>
+                As part of your onboarding requirements,
+                please complete the mandatory security
+                awareness training.
+            </p>
+
+            <div class="info-box">
+
+                <strong>Deadline:</strong>
+                October 10, 2026
+
+                <br>
+
+                <strong>Priority:</strong>
+                Medium
+
+                <br>
+
+                <strong>Category:</strong>
+                Learning
+
+            </div>
+
+            <p>
+                The training contains several modules
+                and must be completed before the deadline.
+            </p>
+
+        `,
+
+        action:
+            "Open Security Training",
+
+        actionPath:
+            "/mock/security-training"
+
+    },
+
+
+    epfo: {
+
+        sender:
+            "HR Operations",
+
+        subject:
+            "EPFO Nominee Declaration Required",
+
+        preview:
+            "Please complete your EPFO nominee declaration as part of your onboarding...",
+
+        date:
+            "October 5, 2026",
+
+        to:
+            "Lisha D S",
+
+        body: `
+
+            <p>Hello,</p>
+
+            <p>
+                Please complete your EPFO nominee
+                declaration as part of your employee
+                onboarding documentation.
+            </p>
+
+            <div class="info-box">
+
+                <strong>Deadline:</strong>
+                October 12, 2026
+
+                <br>
+
+                <strong>Required action:</strong>
+                Submit nominee details
+
+            </div>
+
+            <p>
+                Please ensure that the nominee information
+                is reviewed before submitting the declaration.
+            </p>
+
+        `,
+
+        action:
+            "Open EPFO Nomination",
+
+        actionPath:
+            "/mock/epfo"
+
+    },
+
+
+    access: {
+
+        sender:
+            "Enterprise Access Management",
+
+        subject:
+            "Application Access Request",
+
+        preview:
+            "Your manager has requested application access for your role...",
+
+        date:
+            "October 5, 2026",
+
+        to:
+            "Lisha D S",
+
+        body: `
+
+            <p>Hello,</p>
+
+            <p>
+                Your manager has requested application
+                access for your Infrastructure Specialist
+                role.
+            </p>
+
+            <div class="info-box">
+
+                <strong>Applications:</strong>
+
+                <br>
+                • Cloud Operations Portal
+
+                <br>
+                • Infrastructure Monitoring
+
+                <br>
+                • Service Management
+
+                <br><br>
+
+                <strong>Deadline:</strong>
+                October 8, 2026
+
+            </div>
+
+            <p>
+                Please review and submit the access request.
+            </p>
+
+        `,
+
+        action:
+            "Open Access Request",
+
+        actionPath:
+            "/mock/access-request-form"
+
+    },
+
+
+    benefits: {
+
+        sender:
+            "People Operations",
+
+        subject:
+            "Employee Benefits Enrollment",
+
+        preview:
+            "Your employee benefits enrollment window is now open...",
+
+        date:
+            "October 5, 2026",
+
+        to:
+            "Lisha D S",
+
+        body: `
+
+            <p>Hello,</p>
+
+            <p>
+                Your employee benefits enrollment window
+                is now open. Please review your available
+                benefits and submit your selections.
+            </p>
+
+            <div class="info-box">
+
+                <strong>
+                    Enrollment deadline:
+                </strong>
+
+                October 20, 2026
+
+            </div>
+
+            <p>
+                You can review and confirm your selections
+                using the employee benefits portal.
+            </p>
+
+        `,
+
+        action:
+            "Open Benefits Portal",
+
+        actionPath:
+            "/mock/benefits-form"
+
+    }
+
+};
+
+
+/* =========================================================
+   TEAMS MESSAGES
+   ========================================================= */
+
+const teamsMessages = {
+
+    cloud: {
+
+        sender:
+            "Aarohi Mehta",
+
+        initials:
+            "AM",
+
+        channel:
+            "#onboarding",
+
+        subject:
+            "Cloud Fundamentals Assessment",
+
+        date:
+            "October 5, 2026",
+
+        preview:
+            "Please complete the Cloud Fundamentals assessment before October 15.",
+
+        body: `
+
+            Please complete the Cloud Fundamentals
+            assessment before October 15.
+
+            <br><br>
+
+            The assessment is part of the onboarding
+            learning requirements.
+
+        `,
+
+        action:
+            "Open Assessment",
+
+        actionPath:
+            "/mock/cloud-assessment"
+
+    },
+
+
+    welcome: {
+
+        sender:
+            "Cloud Operations Team",
+
+        initials:
+            "CO",
+
+        channel:
+            "#general",
+
+        subject:
+            "Welcome to Cloud Operations Team",
+
+        date:
+            "October 5, 2026",
+
+        preview:
+            "Welcome to the Cloud Operations team.",
+
+        body: `
+
+            Welcome to the Cloud Operations team.
+
+            <br><br>
+
+            We are happy to have you onboard.
+
+        `,
+
+        action:
+            null,
+
+        actionPath:
+            null
+
+    }
+
+};
+
+
+/* =========================================================
+   SERVICENOW TICKETS
+   ========================================================= */
+
+const serviceNowTickets = {
+
+    access: {
+
+        number:
+            "INC0012847",
+
+        title:
+            "Infrastructure Access Request",
+
+        status:
+            "Action Required",
+
+        statusClass:
+            "badge-orange",
+
+        priority:
+            "Medium",
+
+        priorityClass:
+            "badge-orange",
+
+        assignment:
+            "Infrastructure Operations",
+
+        category:
+            "Access Management",
+
+        description:
+            "Please review the infrastructure access request and provide the required information.",
+
+        deadline:
+            "October 10, 2026",
+
+        action:
+            "Update Access Request"
+
+    },
+
+
+    monitoring: {
+
+        number:
+            "REQ0021745",
+
+        title:
+            "Infrastructure Monitoring Access",
+
+        status:
+            "Open",
+
+        statusClass:
+            "badge-blue",
+
+        priority:
+            "Medium",
+
+        priorityClass:
+            "badge-orange",
+
+        assignment:
+            "Infrastructure Operations",
+
+        category:
+            "Service Request",
+
+        description:
+            "Monitoring access request for onboarding. Please review the required monitoring permissions.",
+
+        deadline:
+            "October 12, 2026",
+
+        action:
+            "Review Monitoring Request"
+
+    },
+
+
+    cloud: {
+
+        number:
+            "CHG0009182",
+
+        title:
+            "Cloud Operations Access",
+
+        status:
+            "Pending",
+
+        statusClass:
+            "badge-purple",
+
+        priority:
+            "Medium",
+
+        priorityClass:
+            "badge-orange",
+
+        assignment:
+            "Cloud Operations",
+
+        category:
+            "Change Request",
+
+        description:
+            "Cloud operations access request awaiting action as part of the onboarding process.",
+
+        deadline:
+            "October 15, 2026",
+
+        action:
+            "Review Change Request"
+
+    }
+
+};
+
+
+/* =========================================================
+   SERVICENOW SECTIONS
+   ========================================================= */
+
+const serviceNowSections = {
+
+    work: {
+
+        title:
+            "My Work",
+
+        subtitle:
+            "Items requiring your attention",
+
+        tickets: [
+            "access",
+            "monitoring",
+            "cloud"
+        ]
+
+    },
+
+
+    incidents: {
+
+        title:
+            "Incidents",
+
+        subtitle:
+            "Incident tickets requiring attention",
+
+        tickets: [
+            "access"
+        ]
+
+    },
+
+
+    requests: {
+
+        title:
+            "Requests",
+
+        subtitle:
+            "Service requests assigned to you",
+
+        tickets: [
+            "monitoring"
+        ]
+
+    },
+
+
+    changes: {
+
+        title:
+            "Changes",
+
+        subtitle:
+            "Change requests requiring review",
+
+        tickets: [
+            "cloud"
+        ]
+
+    },
+
+
+    knowledge: {
+
+        title:
+            "Knowledge",
+
+        subtitle:
+            "Helpful onboarding knowledge",
+
+        tickets: []
+
+    }
+
+};
+
+
+/* =========================================================
+   ACTION PAGES
+   ========================================================= */
+
+const actionPages = {
+
+    "security-training": {
+
+        brand:
+            "Kyndryl Learning Portal",
+
+        title:
+            "Mandatory Security Awareness Training",
+
+        body: `
+
+            <p>
+                Welcome to the mandatory security awareness
+                training.
+            </p>
+
+            <div class="info-box">
+
+                <strong>
+                    Completion deadline:
+                </strong>
+
+                October 10, 2026
+
+                <br>
+
+                <strong>
+                    Modules:
+                </strong>
+
+                4
+
+                <br>
+
+                <strong>
+                    Estimated time:
+                </strong>
+
+                45 minutes
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Training Module
+                </label>
+
+                <select>
+
+                    <option>
+                        Security Awareness Fundamentals
+                    </option>
+
+                    <option>
+                        Data Protection
+                    </option>
+
+                    <option>
+                        Phishing Awareness
+                    </option>
+
+                    <option>
+                        Incident Reporting
+                    </option>
+
+                </select>
+
+            </div>
+
+        `,
+
+        button:
+            "Start Training"
+
+    },
+
+
+    "epfo": {
+
+        brand:
+            "EPFO Member Services",
+
+        title:
+            "Nominee Declaration",
+
+        body: `
+
+            <p>
+                Please provide and verify your nominee
+                information.
+            </p>
+
+            <div class="form-row">
+
+                <label>
+                    Employee Name
+                </label>
+
+                <input
+                    value="Lisha D S"
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Nominee Name
+                </label>
+
+                <input
+                    placeholder="Enter nominee name"
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Relationship
+                </label>
+
+                <select>
+
+                    <option>
+                        Select relationship
+                    </option>
+
+                    <option>
+                        Mother
+                    </option>
+
+                    <option>
+                        Father
+                    </option>
+
+                    <option>
+                        Spouse
+                    </option>
+
+                    <option>
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Nominee Share (%)
+                </label>
+
+                <input
+                    type="number"
+                    value="100"
+                >
+
+            </div>
+
+        `,
+
+        button:
+            "Submit Nominee Declaration"
+
+    },
+
+
+    "access-request-form": {
+
+        brand:
+            "Enterprise Access Management",
+
+        title:
+            "Application Access Request",
+
+        body: `
+
+            <div class="form-row">
+
+                <label>
+                    Employee
+                </label>
+
+                <input
+                    value="Lisha D S"
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Role
+                </label>
+
+                <input
+                    value="Infrastructure Specialist"
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Application
+                </label>
+
+                <select>
+
+                    <option>
+                        Cloud Operations Portal
+                    </option>
+
+                    <option>
+                        Infrastructure Monitoring
+                    </option>
+
+                    <option>
+                        Service Management
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Access Type
+                </label>
+
+                <select>
+
+                    <option>
+                        Standard Access
+                    </option>
+
+                    <option>
+                        Read Only
+                    </option>
+
+                    <option>
+                        Elevated Access
+                    </option>
+
+                </select>
+
+            </div>
+
+        `,
+
+        button:
+            "Submit Access Request"
+
+    },
+
+
+    "benefits-form": {
+
+        brand:
+            "Employee Benefits Portal",
+
+        title:
+            "Benefits Enrollment",
+
+        body: `
+
+            <p>
+                Review the available employee benefits
+                and select your preferences.
+            </p>
+
+            <div class="form-row">
+
+                <label>
+                    Health Insurance
+                </label>
+
+                <select>
+
+                    <option>
+                        Standard Plan
+                    </option>
+
+                    <option>
+                        Enhanced Plan
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Meal Benefit
+                </label>
+
+                <select>
+
+                    <option>
+                        Enable
+                    </option>
+
+                    <option>
+                        Do Not Enable
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Additional Comments
+                </label>
+
+                <textarea
+                    placeholder="Optional"
+                ></textarea>
+
+            </div>
+
+        `,
+
+        button:
+            "Submit Benefits Selection"
+
+    },
+
+
+    "cloud-assessment": {
+
+        brand:
+            "Kyndryl Assessment Portal",
+
+        title:
+            "Cloud Fundamentals Assessment",
+
+        body: `
+
+            <p>
+                Complete the assessment to demonstrate
+                your understanding of cloud fundamentals.
+            </p>
+
+            <div class="info-box">
+
+                <strong>
+                    Questions:
+                </strong>
+
+                20
+
+                <br>
+
+                <strong>
+                    Time:
+                </strong>
+
+                30 minutes
+
+                <br>
+
+                <strong>
+                    Passing score:
+                </strong>
+
+                70%
+
+            </div>
+
+        `,
+
+        button:
+            "Start Assessment"
+
+    },
+
+
+    "servicenow-form": {
+
+        brand:
+            "ServiceNow",
+
+        title:
+            "Update Infrastructure Access Ticket",
+
+        body: `
+
+            <div class="form-row">
+
+                <label>
+                    Ticket Number
+                </label>
+
+                <input
+                    value="INC0012847"
+                    readonly
+                >
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Access Required
+                </label>
+
+                <select>
+
+                    <option>
+                        Infrastructure Operations
+                    </option>
+
+                    <option>
+                        Cloud Operations
+                    </option>
+
+                    <option>
+                        Monitoring
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>
+                    Business Justification
+                </label>
+
+                <textarea
+                    placeholder="Enter business justification"
+                ></textarea>
+
+            </div>
+
+        `,
+
+        button:
+            "Update Ticket"
+
+    }
+
+};
+
+
+/* =========================================================
+   OUTLOOK RENDER
+   ========================================================= */
+
+function renderOutlook(
+    emailId = "security",
+    section = "inbox"
+) {
+
+    const email =
+        outlookEmails[emailId] ||
+        outlookEmails.security;
+
+
+    return `
+
+        <div
+            class="
+                topbar
+                outlook-topbar
+            "
+        >
+
+            Outlook
+
+            <span>
+                Enterprise Demo Environment
+            </span>
+
+        </div>
+
+
+        <div
+            class="
+                app-layout
+            "
+        >
+
+
+            <div
+                class="
+                    sidebar
+                    outlook-sidebar
+                "
+            >
+
+                <div
+                    class="
+                        sidebar-title
+                    "
+                >
+                    Outlook
+                </div>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "inbox"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openOutlookSection('inbox')
+                    "
+                >
+                    Inbox
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "sent"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openOutlookSection('sent')
+                    "
+                >
+                    Sent
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "drafts"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openOutlookSection('drafts')
+                    "
+                >
+                    Drafts
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "archive"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openOutlookSection('archive')
+                    "
+                >
+                    Archive
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "notifications"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openOutlookSection('notifications')
+                    "
+                >
+                    Notifications
+                </button>
+
+            </div>
+
+
+            <div
+                class="
+                    app-main
+                "
+            >
+
+                ${
+                    section === "inbox"
+
+                        ? `
+
+                            <div
+                                class="
+                                    card
+                                    outlook-main
+                                "
+                            >
+
+
+                                <div
+                                    class="
+                                        outlook-message-list
+                                    "
+                                >
+
+                                    <div
+                                        class="
+                                            outlook-list-header
+                                        "
+                                    >
+
+                                        <h2>
+                                            Inbox
+                                        </h2>
+
+                                        <p>
+                                            Lisha D S —
+                                            Enterprise Mail
+                                        </p>
+
+                                    </div>
+
+
+                                    ${renderEmailList(emailId)}
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        email-view
+                                    "
+                                >
+
+                                    <div
+                                        class="
+                                            email-view-header
+                                        "
+                                    >
+
+                                        <h1>
+                                            ${email.subject}
+                                        </h1>
+
+
+                                        <div
+                                            class="
+                                                email-meta
+                                            "
+                                        >
+
+                                            <div
+                                                class="
+                                                    email-meta-row
+                                                "
+                                            >
+
+                                                <span
+                                                    class="
+                                                        email-label
+                                                    "
+                                                >
+                                                    From
+                                                </span>
+
+                                                <strong>
+                                                    ${email.sender}
+                                                </strong>
+
+                                            </div>
+
+
+                                            <div
+                                                class="
+                                                    email-meta-row
+                                                "
+                                            >
+
+                                                <span
+                                                    class="
+                                                        email-label
+                                                    "
+                                                >
+                                                    To
+                                                </span>
+
+                                                ${email.to}
+
+                                            </div>
+
+
+                                            <div
+                                                class="
+                                                    email-meta-row
+                                                "
+                                            >
+
+                                                <span
+                                                    class="
+                                                        email-label
+                                                    "
+                                                >
+                                                    Date
+                                                </span>
+
+                                                ${email.date}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div
+                                        class="
+                                            email-body
+                                        "
+                                    >
+
+                                        ${email.body}
+
+
+                                        <div
+                                            class="
+                                                outlook-action-area
+                                            "
+                                        >
+
+                                            <a
+                                                class="
+                                                    action-button
+                                                    blue-button
+                                                "
+                                                href="
+                                                    ${email.actionPath}
+                                                "
+                                            >
+                                                ${email.action}
+                                            </a>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+                          `
+
+                        : `
+
+                            <div
+                                class="
+                                    card
+                                "
+                            >
+
+                                <div
+                                    class="
+                                        email-view-header
+                                    "
+                                >
+
+                                    <h1>
+                                        ${
+                                            section
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                            section.slice(1)
+                                        }
+                                    </h1>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        email-body
+                                    "
+                                >
+
+                                    <p>
+                                        This Outlook section
+                                        is currently empty in
+                                        the enterprise demo.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                          `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   OUTLOOK EMAIL LIST
+   ========================================================= */
+
+function renderEmailList(
+    selectedId
+) {
+
+    return Object.entries(
+        outlookEmails
+    )
+    .map(
+        ([id, email]) => {
+
+            return `
+
+                <button
+                    class="
+                        email-item
+                        ${
+                            id === selectedId
+                                ? "selected"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openEmail('${id}')
+                    "
+                >
+
+                    <div
+                        class="
+                            email-sender
+                        "
+                    >
+                        ${email.sender}
+                    </div>
+
+
+                    <div
+                        class="
+                            email-subject
+                        "
+                    >
+                        ${email.subject}
+                    </div>
+
+
+                    <div
+                        class="
+                            email-preview
+                        "
+                    >
+                        ${email.preview}
+                    </div>
+
+
+                    <div
+                        class="
+                            email-date
+                        "
+                    >
+                        ${email.date}
+                    </div>
+
+                </button>
+
+            `;
+
+        }
+    )
+    .join("");
+
+}
+
+
+/* =========================================================
+   OUTLOOK NAVIGATION
+   ========================================================= */
+
+function openEmail(
+    emailId
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/outlook?email=${encodeURIComponent(emailId)}&section=inbox`
+    );
+
+}
+
+
+function openOutlookSection(
+    section
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/outlook?section=${encodeURIComponent(section)}`
+    );
+
+}
+
+
+/* =========================================================
+   TEAMS RENDER
+   ========================================================= */
+
+function renderTeams(
+    messageId = "cloud",
+    section = "chat"
+) {
+
+    const message =
+        teamsMessages[messageId] ||
+        teamsMessages.cloud;
+
+
+    const titles = {
+
+        chat: [
+            "Chat",
+            "Your recent conversations"
+        ],
+
+        teams: [
+            "Teams",
+            "Your Microsoft Teams"
+        ],
+
+        calendar: [
+            "Calendar",
+            "Your upcoming meetings"
+        ],
+
+        calls: [
+            "Calls",
+            "Recent calls"
+        ],
+
+        files: [
+            "Files",
+            "Shared files"
+        ]
+
+    };
+
+
+    const title =
+        titles[section]
+            ? titles[section][0]
+            : "Chat";
+
+
+    const subtitle =
+        titles[section]
+            ? titles[section][1]
+            : "Your recent conversations";
+
+
+    return `
+
+        <div
+            class="
+                topbar
+                teams-topbar
+            "
+        >
+
+            Microsoft Teams
+
+            <span>
+                Enterprise Demo Environment
+            </span>
+
+        </div>
+
+
+        <div
+            class="
+                app-layout
+            "
+        >
+
+
+            <div
+                class="
+                    sidebar
+                    teams-sidebar
+                "
+            >
+
+                <div
+                    class="
+                        sidebar-title
+                    "
+                >
+                    Teams
+                </div>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "chat"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openTeamsSection('chat')
+                    "
+                >
+                    Chat
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "teams"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openTeamsSection('teams')
+                    "
+                >
+                    Teams
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "calendar"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openTeamsSection('calendar')
+                    "
+                >
+                    Calendar
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "calls"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openTeamsSection('calls')
+                    "
+                >
+                    Calls
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "files"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openTeamsSection('files')
+                    "
+                >
+                    Files
+                </button>
+
+            </div>
+
+
+            ${
+                section === "chat" ||
+                section === "teams"
+
+                    ? `
+
+                        <div
+                            class="
+                                teams-main
+                            "
+                        >
+
+
+                            <div
+                                class="
+                                    teams-chat-list
+                                "
+                            >
+
+                                <div
+                                    class="
+                                        teams-list-header
+                                    "
+                                >
+
+                                    <h2>
+                                        ${title}
+                                    </h2>
+
+                                    <p>
+                                        ${subtitle}
+                                    </p>
+
+                                </div>
+
+
+                                ${
+
+                                    Object.entries(
+                                        teamsMessages
+                                    )
+                                    .map(
+                                        ([id, item]) => {
+
+                                            return `
+
+                                                <button
+                                                    class="
+                                                        teams-message-item
+                                                        ${
+                                                            id === messageId
+                                                                ? "selected"
+                                                                : ""
+                                                        }
+                                                    "
+                                                    onclick="
+                                                        openTeamsMessage(
+                                                            '${id}'
+                                                        )
+                                                    "
+                                                >
+
+                                                    <div
+                                                        class="
+                                                            teams-message-sender
+                                                        "
+                                                    >
+                                                        ${item.sender}
+                                                    </div>
+
+
+                                                    <div
+                                                        class="
+                                                            teams-message-subject
+                                                        "
+                                                    >
+                                                        ${item.subject}
+                                                    </div>
+
+
+                                                    <div
+                                                        class="
+                                                            teams-message-preview
+                                                        "
+                                                    >
+                                                        ${item.preview}
+                                                    </div>
+
+                                                </button>
+
+                                            `;
+
+                                        }
+                                    )
+                                    .join("")
+
+                                }
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    teams-content
+                                "
+                            >
+
+                                <div
+                                    class="
+                                        teams-header
+                                    "
+                                >
+
+                                    <h1>
+                                        ${title}
+                                    </h1>
+
+                                    <p>
+                                        ${subtitle}
+                                    </p>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        teams-message-card
+                                    "
+                                >
+
+                                    <div
+                                        class="
+                                            profile
+                                        "
+                                    >
+
+                                        <div
+                                            class="
+                                                avatar
+                                            "
+                                        >
+                                            ${message.initials}
+                                        </div>
+
+
+                                        <div>
+
+                                            <div
+                                                class="
+                                                    profile-name
+                                                "
+                                            >
+                                                ${message.sender}
+                                            </div>
+
+                                            <div
+                                                class="
+                                                    profile-channel
+                                                "
+                                            >
+                                                ${message.channel}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <h2
+                                        class="
+                                            message-subject
+                                        "
+                                    >
+                                        ${message.subject}
+                                    </h2>
+
+
+                                    <div
+                                        class="
+                                            message-date
+                                        "
+                                    >
+                                        ${message.date}
+                                    </div>
+
+
+                                    <div
+                                        class="
+                                            message-bubble
+                                        "
+                                    >
+                                        ${message.body}
+                                    </div>
+
+
+                                    ${
+                                        message.action
+
+                                            ? `
+
+                                                <div
+                                                    class="
+                                                        teams-action-area
+                                                    "
+                                                >
+
+                                                    <a
+                                                        class="
+                                                            action-button
+                                                            purple-button
+                                                        "
+                                                        href="
+                                                            ${message.actionPath}
+                                                        "
+                                                    >
+                                                        ${message.action}
+                                                    </a>
+
+                                                </div>
+
+                                              `
+
+                                            : ""
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                      `
+
+                    : `
+
+                        <div
+                            class="
+                                teams-content
+                            "
+                        >
+
+                            <div
+                                class="
+                                    teams-header
+                                "
+                            >
+
+                                <h1>
+                                    ${title}
+                                </h1>
+
+                                <p>
+                                    ${subtitle}
+                                </p>
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    teams-section-card
+                                "
+                            >
+
+                                ${
+                                    section === "calendar"
+
+                                        ? `
+
+                                            <div
+                                                class="
+                                                    calendar-event
+                                                "
+                                            >
+
+                                                <strong>
+                                                    Cloud Operations
+                                                    Onboarding
+                                                </strong>
+
+                                                <br>
+
+                                                <span
+                                                    style="
+                                                        color:#64748b;
+                                                        font-size:12px;
+                                                    "
+                                                >
+                                                    October 6, 2026
+                                                    —
+                                                    10:00 AM
+                                                </span>
+
+                                            </div>
+
+
+                                            <div
+                                                class="
+                                                    calendar-event
+                                                "
+                                            >
+
+                                                <strong>
+                                                    Infrastructure
+                                                    Training
+                                                </strong>
+
+                                                <br>
+
+                                                <span
+                                                    style="
+                                                        color:#64748b;
+                                                        font-size:12px;
+                                                    "
+                                                >
+                                                    October 7, 2026
+                                                    —
+                                                    2:00 PM
+                                                </span>
+
+                                            </div>
+
+                                          `
+
+                                        : ""
+                                }
+
+
+                                ${
+                                    section === "calls"
+
+                                        ? `
+
+                                            <div
+                                                class="
+                                                    call-row
+                                                "
+                                            >
+
+                                                <strong>
+                                                    Aarohi Mehta
+                                                </strong>
+
+                                                <br>
+
+                                                <span
+                                                    style="
+                                                        color:#64748b;
+                                                        font-size:12px;
+                                                    "
+                                                >
+                                                    Recent Teams call
+                                                </span>
+
+                                            </div>
+
+                                          `
+
+                                        : ""
+                                }
+
+
+                                ${
+                                    section === "files"
+
+                                        ? `
+
+                                            <div
+                                                class="
+                                                    file-row
+                                                "
+                                            >
+
+                                                <strong>
+                                                    Cloud Fundamentals
+                                                    Guide.pdf
+                                                </strong>
+
+                                                <br>
+
+                                                <span
+                                                    style="
+                                                        color:#64748b;
+                                                        font-size:12px;
+                                                    "
+                                                >
+                                                    Shared file
+                                                </span>
+
+                                            </div>
+
+
+                                            <div
+                                                class="
+                                                    file-row
+                                                "
+                                            >
+
+                                                <strong>
+                                                    Onboarding
+                                                    Checklist.docx
+                                                </strong>
+
+                                                <br>
+
+                                                <span
+                                                    style="
+                                                        color:#64748b;
+                                                        font-size:12px;
+                                                    "
+                                                >
+                                                    Shared file
+                                                </span>
+
+                                            </div>
+
+                                          `
+
+                                        : ""
+                                }
+
+                            </div>
+
+                        </div>
+
+                      `
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   TEAMS NAVIGATION
+   ========================================================= */
+
+function openTeamsSection(
+    section
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/teams?section=${encodeURIComponent(section)}`
+    );
+
+}
+
+
+function openTeamsMessage(
+    messageId
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/teams?message=${encodeURIComponent(messageId)}&section=chat`
+    );
+
+}
+
+
+/* =========================================================
+   SERVICENOW RENDER
+   ========================================================= */
+
+function renderServiceNow(
+    ticketId = null,
+    section = "work"
+) {
+
+    const currentSection =
+        serviceNowSections[section] ||
+        serviceNowSections.work;
+
+
+    /* -----------------------------------------------------
+       IF A SPECIFIC TICKET IS OPEN
+       ----------------------------------------------------- */
+
+    if (
+        ticketId &&
+        serviceNowTickets[ticketId]
+    ) {
+
+        return renderServiceNowTicket(
+            ticketId,
+            section
+        );
+
+    }
+
+
+    return `
+
+        <div
+            class="
+                topbar
+                servicenow-topbar
+            "
+        >
+
+            ServiceNow
+
+            <span>
+                Enterprise Demo Environment
+            </span>
+
+        </div>
+
+
+        <div
+            class="
+                app-layout
+            "
+        >
+
+
+            <div
+                class="
+                    sidebar
+                    servicenow-sidebar
+                "
+            >
+
+                <div
+                    class="
+                        sidebar-title
+                    "
+                >
+                    ServiceNow
+                </div>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "work"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('work')
+                    "
+                >
+                    My Work
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "incidents"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('incidents')
+                    "
+                >
+                    Incidents
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "requests"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('requests')
+                    "
+                >
+                    Requests
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "changes"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('changes')
+                    "
+                >
+                    Changes
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            section === "knowledge"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('knowledge')
+                    "
+                >
+                    Knowledge
+                </button>
+
+            </div>
+
+
+            <div
+                class="
+                    servicenow-content
+                "
+            >
+
+
+                <div
+                    class="
+                        servicenow-header
+                    "
+                >
+
+                    <h1>
+                        ${currentSection.title}
+                    </h1>
+
+                    <p>
+                        ${currentSection.subtitle}
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="
+                        servicenow-toolbar
+                    "
+                >
+
+                    <span
+                        class="
+                            servicenow-count
+                        "
+                    >
+                        ${
+                            currentSection.tickets.length
+                        }
+                        item(s)
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="
+                        ticket-grid
+                    "
+                >
+
+                    ${
+                        currentSection.tickets.length
+
+                            ? currentSection.tickets
+                                .map(
+                                    id => {
+
+                                        const ticket =
+                                            serviceNowTickets[id];
+
+
+                                        return `
+
+                                            <div
+                                                class="
+                                                    ticket-card
+                                                "
+                                            >
+
+
+                                                <div
+                                                    class="
+                                                        ticket-header
+                                                    "
+                                                >
+
+                                                    <div>
+
+                                                        <div
+                                                            class="
+                                                                ticket-number
+                                                            "
+                                                        >
+                                                            ${ticket.number}
+                                                        </div>
+
+
+                                                        <div
+                                                            class="
+                                                                ticket-title
+                                                            "
+                                                        >
+                                                            ${ticket.title}
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <span
+                                                        class="
+                                                            badge
+                                                            ${ticket.statusClass}
+                                                        "
+                                                    >
+                                                        ${ticket.status}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="
+                                                        ticket-description
+                                                    "
+                                                >
+                                                    ${ticket.description}
+                                                </div>
+
+
+                                                <div
+                                                    class="
+                                                        ticket-meta
+                                                    "
+                                                >
+
+                                                    <div>
+
+                                                        <span
+                                                            class="
+                                                                meta-label
+                                                            "
+                                                        >
+                                                            Assignment Group
+                                                        </span>
+
+                                                        <span
+                                                            class="
+                                                                meta-value
+                                                            "
+                                                        >
+                                                            ${ticket.assignment}
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <span
+                                                            class="
+                                                                meta-label
+                                                            "
+                                                        >
+                                                            Priority
+                                                        </span>
+
+                                                        <span
+                                                            class="
+                                                                badge
+                                                                ${ticket.priorityClass}
+                                                            "
+                                                        >
+                                                            ${ticket.priority}
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <span
+                                                            class="
+                                                                meta-label
+                                                            "
+                                                        >
+                                                            Deadline
+                                                        </span>
+
+                                                        <span
+                                                            class="
+                                                                meta-value
+                                                            "
+                                                        >
+                                                            ${ticket.deadline}
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="
+                                                        ticket-action
+                                                    "
+                                                >
+
+                                                    <button
+                                                        class="
+                                                            action-button
+                                                            navy-button
+                                                        "
+                                                        onclick="
+                                                            openServiceNowTicket(
+                                                                '${id}',
+                                                                '${section}'
+                                                            )
+                                                        "
+                                                    >
+                                                        Open Ticket
+                                                    </button>
+
+                                                </div>
+
+
+                                            </div>
+
+                                        `;
+
+                                    }
+                                )
+                                .join("")
+
+                            : `
+
+                                <div
+                                    class="
+                                        card
+                                    "
+                                    style="
+                                        padding:30px;
+                                    "
+                                >
+
+                                    <strong>
+                                        No items found
+                                    </strong>
+
+                                    <p
+                                        style="
+                                            color:#64748b;
+                                        "
+                                    >
+                                        There are no items in
+                                        this section in the
+                                        enterprise demo.
+                                    </p>
+
+                                </div>
+
+                              `
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   SERVICENOW TICKET DETAIL
+   ========================================================= */
+
+function renderServiceNowTicket(
+    ticketId,
+    previousSection
+) {
+
+    const ticket =
+        serviceNowTickets[ticketId];
+
+
+    return `
+
+        <div
+            class="
+                topbar
+                servicenow-topbar
+            "
+        >
+
+            ServiceNow
+
+            <span>
+                Enterprise Demo Environment
+            </span>
+
+        </div>
+
+
+        <div
+            class="
+                app-layout
+            "
+        >
+
+
+            <div
+                class="
+                    sidebar
+                    servicenow-sidebar
+                "
+            >
+
+                <div
+                    class="
+                        sidebar-title
+                    "
+                >
+                    ServiceNow
+                </div>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            previousSection === "work"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('work')
+                    "
+                >
+                    My Work
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            previousSection === "incidents"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('incidents')
+                    "
+                >
+                    Incidents
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            previousSection === "requests"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('requests')
+                    "
+                >
+                    Requests
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                        ${
+                            previousSection === "changes"
+                                ? "active"
+                                : ""
+                        }
+                    "
+                    onclick="
+                        openServiceNowSection('changes')
+                    "
+                >
+                    Changes
+                </button>
+
+
+                <button
+                    class="
+                        sidebar-item
+                    "
+                    onclick="
+                        openServiceNowSection('knowledge')
+                    "
+                >
+                    Knowledge
+                </button>
+
+            </div>
+
+
+            <div
+                class="
+                    servicenow-content
+                "
+            >
+
+
+                <div
+                    class="
+                        ticket-detail
+                    "
+                >
+
+
+                    <button
+                        class="
+                            action-button
+                            gray-button
+                        "
+                        onclick="
+                            openServiceNowSection(
+                                '${previousSection}'
+                            )
+                        "
+                        style="
+                            margin-bottom:16px;
+                        "
+                    >
+                        ← Back to ${
+                            serviceNowSections[
+                                previousSection
+                            ].title
+                        }
+                    </button>
+
+
+                    <div
+                        class="
+                            ticket-detail-card
+                        "
+                    >
+
+
+                        <div
+                            class="
+                                ticket-detail-header
+                            "
+                        >
+
+                            <div>
+
+                                <div
+                                    class="
+                                        ticket-detail-number
+                                    "
+                                >
+                                    ${ticket.number}
+                                </div>
+
+
+                                <div
+                                    class="
+                                        ticket-detail-title
+                                    "
+                                >
+                                    ${ticket.title}
+                                </div>
+
+                            </div>
+
+
+                            <span
+                                class="
+                                    badge
+                                    ${ticket.statusClass}
+                                "
+                            >
+                                ${ticket.status}
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                ticket-detail-body
+                            "
+                        >
+
+
+                            <div
+                                class="
+                                    ticket-detail-description
+                                "
+                            >
+
+                                ${ticket.description}
+
+                                <br><br>
+
+                                This ticket requires action
+                                as part of the onboarding
+                                workflow.
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    detail-grid
+                                "
+                            >
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Assignment Group
+                                    </span>
+
+                                    <span
+                                        class="
+                                            detail-box-value
+                                        "
+                                    >
+                                        ${ticket.assignment}
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Category
+                                    </span>
+
+                                    <span
+                                        class="
+                                            detail-box-value
+                                        "
+                                    >
+                                        ${ticket.category}
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Priority
+                                    </span>
+
+                                    <span
+                                        class="
+                                            badge
+                                            ${ticket.priorityClass}
+                                        "
+                                    >
+                                        ${ticket.priority}
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Deadline
+                                    </span>
+
+                                    <span
+                                        class="
+                                            detail-box-value
+                                        "
+                                    >
+                                        ${ticket.deadline}
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Requested For
+                                    </span>
+
+                                    <span
+                                        class="
+                                            detail-box-value
+                                        "
+                                    >
+                                        Lisha D S
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    class="
+                                        detail-box
+                                    "
+                                >
+
+                                    <span
+                                        class="
+                                            detail-box-label
+                                        "
+                                    >
+                                        Status
+                                    </span>
+
+                                    <span
+                                        class="
+                                            badge
+                                            ${ticket.statusClass}
+                                        "
+                                    >
+                                        ${ticket.status}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    detail-actions
+                                "
+                            >
+
+                                <button
+                                    class="
+                                        action-button
+                                        navy-button
+                                    "
+                                    onclick="
+                                        openServiceNowForm(
+                                            '${ticketId}'
+                                        )
+                                    "
+                                >
+                                    ${ticket.action}
+                                </button>
+
+
+                                <button
+                                    class="
+                                        action-button
+                                        gray-button
+                                    "
+                                    onclick="
+                                        openServiceNowSection(
+                                            '${previousSection}'
+                                        )
+                                    "
+                                >
+                                    Back to List
+                                </button>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   SERVICENOW NAVIGATION
+   ========================================================= */
+
+function openServiceNowSection(
+    section
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/servicenow?section=${encodeURIComponent(section)}`
+    );
+
+}
+
+
+function openServiceNowTicket(
+    ticketId,
+    section = "work"
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/servicenow?ticket=${encodeURIComponent(ticketId)}&section=${encodeURIComponent(section)}`
+    );
+
+}
+
+
+function openServiceNowForm(
+    ticketId
+) {
+
+    window.location.assign(
+        `${window.location.origin}/mock/servicenow-form?ticket=${encodeURIComponent(ticketId)}`
+    );
+
+}
+
+
+/* =========================================================
+   ACTION PAGE
+   ========================================================= */
+
+function renderAction(
+    page
+) {
+
+    return `
+
+        <div
+            class="
+                topbar
+                action-topbar
+            "
+        >
+
+            ${page.brand}
+
+            <span>
+                Enterprise Demo Environment
+            </span>
+
+        </div>
+
+
+        <div
+            class="
+                action-page
+            "
+        >
+
+            <div
+                class="
+                    action-card
+                "
+            >
+
+                <div
+                    class="
+                        action-card-header
+                    "
+                >
+
+                    <h1>
+                        ${page.title}
+                    </h1>
+
+                    <p>
+                        Complete the required action
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="
+                        action-card-body
+                    "
+                >
+
+                    ${page.body}
+
+
+                    <button
+                        class="
+                            action-button
+                            navy-button
+                        "
+                        onclick="
+                            completeAction()
+                        "
+                    >
+                        ${page.button}
+                    </button>
+
+
+                    <div
+                        id="success"
+                        class="success"
+                    >
+
+                        ✓ Action completed successfully.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   ACTION COMPLETION
+   ========================================================= */
+
+function completeAction() {
+
+    const success =
+        document.getElementById(
+            "success"
+        );
+
+
+    if (success) {
+
+        success.style.display =
+            "block";
+
+    }
+
+}
+
+
+/* =========================================================
+   ROUTING
+   ========================================================= */
+
+const pathParts =
+    window.location.pathname
+        .split("/")
+        .filter(Boolean);
+
+
+const site =
+    pathParts[
+        pathParts.length - 1
+    ];
+
+
+/* =========================================================
+   OUTLOOK ROUTE
+   ========================================================= */
+
+if (
+    site === "outlook"
+) {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const emailId =
+        params.get("email") ||
+        "security";
+
+
+    const section =
+        params.get("section") ||
+        "inbox";
+
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderOutlook(
+                emailId,
+                section
+            );
+
+}
+
+
+/* =========================================================
+   TEAMS ROUTE
+   ========================================================= */
+
+else if (
+    site === "teams"
+) {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const messageId =
+        params.get("message") ||
+        "cloud";
+
+
+    const section =
+        params.get("section") ||
+        "chat";
+
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderTeams(
+                messageId,
+                section
+            );
+
+}
+
+
+/* =========================================================
+   SERVICENOW ROUTE
+   ========================================================= */
+
+else if (
+    site === "servicenow"
+) {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const ticketId =
+        params.get("ticket") ||
+        null;
+
+
+    const section =
+        params.get("section") ||
+        "work";
+
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderServiceNow(
+                ticketId,
+                section
+            );
+
+}
+
+
+/* =========================================================
+   ACTION ROUTES
+   ========================================================= */
+
+else if (
+    actionPages[site]
+) {
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderAction(
+                actionPages[site]
+            );
+
+}
+
+
+/* =========================================================
+   OLD OUTLOOK ROUTES
+   ========================================================= */
+
+else if (
+    site === "outlook-security" ||
+    site === "outlook-epfo"
+) {
+
+    const emailId =
+        site === "outlook-epfo"
+            ? "epfo"
+            : "security";
+
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderOutlook(
+                emailId,
+                "inbox"
+            );
+
+}
+
+
+/* =========================================================
+   OLD TEAMS ROUTE
+   ========================================================= */
+
+else if (
+    site === "teams-assessment"
+) {
+
+    document
+        .getElementById("app")
+        .innerHTML =
+            renderTeams(
+                "cloud",
+                "chat"
+            );
+
+}
+
+
+/* =========================================================
+   PAGE NOT FOUND
+   ========================================================= */
+
+else {
+
+    document
+        .getElementById("app")
+        .innerHTML = `
+
+            <div
+                class="
+                    action-page
+                "
+            >
+
+                <div
+                    class="
+                        action-card
+                    "
+                >
+
+                    <div
+                        class="
+                            action-card-body
+                        "
+                    >
+
+                        <h1>
+                            Page not found
+                        </h1>
+
+                        <p>
+                            The requested enterprise
+                            demo page does not exist.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+}
+
+</script>
+
+</body>
+
+</html>
