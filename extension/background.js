@@ -3,6 +3,49 @@ const API_URL =
 
 
 // =========================================================
+// NOTIFICATION METRICS
+// =========================================================
+
+async function recordNotificationMetric() {
+    try {
+        await fetch(
+            API_URL + "/metrics/notification",
+            {
+                method: "POST"
+            }
+        );
+    } catch (error) {
+        console.error(
+            "ContextFlow notification metrics error:",
+            error
+        );
+    }
+}
+
+
+async function recordCompletionMetric() {
+    try {
+        await fetch(
+            API_URL + "/metrics/completion",
+            {
+                method: "POST"
+            }
+        );
+
+        console.log(
+            "ContextFlow: Completion metric recorded."
+        );
+
+    } catch (error) {
+        console.error(
+            "ContextFlow completion metrics error:",
+            error
+        );
+    }
+}
+
+
+// =========================================================
 // INSTALLATION
 // =========================================================
 
@@ -91,6 +134,10 @@ chrome.contextMenus.onClicked.addListener(
                 "Selected context captured.",
 
             priority: 1
+
+        }).then(() => {
+
+            recordNotificationMetric();
 
         });
 
@@ -190,6 +237,8 @@ chrome.runtime.onMessage.addListener(
                         notificationId
                     );
 
+                    await recordNotificationMetric();
+
                     await chrome.storage.local.set({
 
                         [`notification_${notificationId}`]:
@@ -245,20 +294,39 @@ chrome.runtime.onMessage.addListener(
             "TASK_COMPLETED"
         ) {
 
-            chrome.notifications.create({
+            try {
 
-                type: "basic",
+                await chrome.notifications.create({
 
-                iconUrl: "icon.png",
+                    type: "basic",
 
-                title: "🎉 ContextFlow",
+                    iconUrl: "icon.png",
 
-                message:
-                    `Task completed successfully: ${message.title}`,
+                    title: "🎉 ContextFlow",
 
-                priority: 2
+                    message:
+                        `Task completed successfully: ${message.title}`,
 
-            });
+                    priority: 2
+
+                });
+
+                await recordNotificationMetric();
+
+                await recordCompletionMetric();
+
+                console.log(
+                    "ContextFlow: Completion notification and metric recorded."
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "ContextFlow completion notification/metrics error:",
+                    error
+                );
+
+            }
 
         }
 
@@ -391,6 +459,8 @@ async function checkForNewTasks(tasks) {
                     "ContextFlow automatic notification created:",
                     notificationId
                 );
+
+                await recordNotificationMetric();
 
 
                 await chrome.storage.local.set({
@@ -690,6 +760,8 @@ chrome.alarms.onAlarm.addListener(
                     "ContextFlow reminder notification created:",
                     notificationId
                 );
+
+                await recordNotificationMetric();
 
 
                 if (

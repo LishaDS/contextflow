@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>ContextFlow Dashboard</title>
 
 <style>
+
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f8;
@@ -26,6 +30,10 @@ h1 {
     color: #666;
     margin-bottom: 25px;
 }
+
+/* ---------------------------------------------------------
+   TASK SUMMARY
+--------------------------------------------------------- */
 
 .summary {
     display: grid;
@@ -51,6 +59,46 @@ h1 {
     font-weight: bold;
     margin-top: 8px;
 }
+
+/* ---------------------------------------------------------
+   OBSERVABILITY METRICS
+--------------------------------------------------------- */
+
+.metrics-section {
+    margin-bottom: 30px;
+}
+
+.metrics-section h2 {
+    margin-bottom: 15px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.metric-card {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.metric-label {
+    color: #666;
+    font-size: 14px;
+}
+
+.metric-number {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+/* ---------------------------------------------------------
+   TASK CARDS
+--------------------------------------------------------- */
 
 .task-card {
     background: white;
@@ -156,11 +204,19 @@ button:hover {
 }
 
 @media (max-width: 800px) {
+
     .summary {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
 }
+
 </style>
+
 </head>
 
 <body>
@@ -172,6 +228,11 @@ button:hover {
 <div class="subtitle">
 AI-powered Context-to-Workflow Automation
 </div>
+
+
+<!-- =========================================================
+     TASK SUMMARY
+========================================================= -->
 
 <div class="summary">
 
@@ -202,6 +263,61 @@ AI-powered Context-to-Workflow Automation
 
 </div>
 
+
+<!-- =========================================================
+     SYSTEM METRICS
+========================================================= -->
+
+<div class="metrics-section">
+
+    <h2>System Metrics</h2>
+
+    <div class="metrics-grid">
+
+        <div class="metric-card">
+            <div class="metric-label">Items Scanned</div>
+            <div class="metric-number" id="itemsScanned">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Tasks Detected</div>
+            <div class="metric-number" id="tasksDetected">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Duplicates Avoided</div>
+            <div class="metric-number" id="duplicatesAvoided">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Critical Tasks</div>
+            <div class="metric-number" id="criticalTasks">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Notifications Sent</div>
+            <div class="metric-number" id="notificationsSent">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Tasks Completed</div>
+            <div class="metric-number" id="metricsTasksCompleted">0</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Sync Failures</div>
+            <div class="metric-number" id="syncFailures">0</div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     FILTERS
+========================================================= -->
+
 <div style="margin-bottom:20px;">
 
     <button onclick="filterTasks('ALL')">
@@ -230,18 +346,24 @@ AI-powered Context-to-Workflow Automation
 
 </div>
 
+
 <h2>Tasks</h2>
 
 <div id="tasks">
-Loading tasks...
+    Loading tasks...
 </div>
 
 </div>
+
 
 <script>
 
 let allTasks = [];
 
+
+/* =========================================================
+   PRIORITY
+========================================================= */
 
 function getEffectivePriority(task) {
 
@@ -253,6 +375,10 @@ function getEffectivePriority(task) {
 
 }
 
+
+/* =========================================================
+   SEARCH
+========================================================= */
 
 function searchTasks() {
 
@@ -296,8 +422,13 @@ function searchTasks() {
     );
 
     renderTasks(filtered);
+
 }
 
+
+/* =========================================================
+   FILTER
+========================================================= */
 
 function filterTasks(filter) {
 
@@ -336,8 +467,13 @@ function filterTasks(filter) {
     }
 
     renderTasks(filtered);
+
 }
 
+
+/* =========================================================
+   PRIORITY CLASS
+========================================================= */
 
 function getPriorityClass(priority) {
 
@@ -354,8 +490,13 @@ function getPriorityClass(priority) {
     }
 
     return "priority-low";
+
 }
 
+
+/* =========================================================
+   RENDER TASKS
+========================================================= */
 
 function renderTasks(tasks) {
 
@@ -434,7 +575,10 @@ function renderTasks(tasks) {
             </div>
 
             <div class="detail">
-                <span class="status-label">Status:</span>
+
+                <span class="status-label">
+                    Status:
+                </span>
 
                 <select
                     class="status-select"
@@ -465,6 +609,7 @@ function renderTasks(tasks) {
                     </option>
 
                 </select>
+
             </div>
 
             <div class="detail">
@@ -527,6 +672,10 @@ function renderTasks(tasks) {
 }
 
 
+/* =========================================================
+   UPDATE STATUS
+========================================================= */
+
 async function updateTaskStatus(taskId, newStatus) {
 
     try {
@@ -560,6 +709,7 @@ async function updateTaskStatus(taskId, newStatus) {
             await loadTasks();
 
             return;
+
         }
 
         await loadTasks();
@@ -578,6 +728,10 @@ async function updateTaskStatus(taskId, newStatus) {
 
 }
 
+
+/* =========================================================
+   LOAD TASKS
+========================================================= */
 
 async function loadTasks() {
 
@@ -617,6 +771,10 @@ async function loadTasks() {
 
 }
 
+
+/* =========================================================
+   TASK SUMMARY
+========================================================= */
 
 function updateSummary(tasks) {
 
@@ -700,6 +858,86 @@ function updateSummary(tasks) {
 }
 
 
+/* =========================================================
+   LOAD SYSTEM METRICS
+========================================================= */
+
+async function loadMetrics() {
+
+    try {
+
+        const response =
+            await fetch("/metrics");
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to load metrics"
+            );
+
+        }
+
+        const metrics =
+            await response.json();
+
+
+        document.getElementById(
+            "itemsScanned"
+        ).textContent =
+            metrics.items_scanned ?? 0;
+
+
+        document.getElementById(
+            "tasksDetected"
+        ).textContent =
+            metrics.tasks_detected ?? 0;
+
+
+        document.getElementById(
+            "duplicatesAvoided"
+        ).textContent =
+            metrics.duplicates_avoided ?? 0;
+
+
+        document.getElementById(
+            "criticalTasks"
+        ).textContent =
+            metrics.critical_tasks ?? 0;
+
+
+        document.getElementById(
+            "notificationsSent"
+        ).textContent =
+            metrics.notifications_sent ?? 0;
+
+
+        document.getElementById(
+            "metricsTasksCompleted"
+        ).textContent =
+            metrics.tasks_completed ?? 0;
+
+
+        document.getElementById(
+            "syncFailures"
+        ).textContent =
+            metrics.sync_failures ?? 0;
+
+    } catch (error) {
+
+        console.error(
+            "Could not load system metrics:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   COMPLETE TASK
+========================================================= */
+
 async function completeTask(taskId) {
 
     try {
@@ -728,6 +966,8 @@ async function completeTask(taskId) {
 
         await loadTasks();
 
+        await loadMetrics();
+
     } catch (error) {
 
         console.error(error);
@@ -741,9 +981,26 @@ async function completeTask(taskId) {
 }
 
 
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
 loadTasks();
+
+loadMetrics();
+
+
+/* =========================================================
+   AUTO REFRESH METRICS
+========================================================= */
+
+setInterval(
+    loadMetrics,
+    10000
+);
 
 </script>
 
 </body>
+
 </html>

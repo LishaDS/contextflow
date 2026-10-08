@@ -21,6 +21,7 @@ from backend.services.deadline_engine import (
     get_deadline_priority,
 )
 from backend.services.task_engine import classify_task
+from backend.services.metrics import get_metrics, increment
 
 from backend.connectors.sync import sync_outlook_items
 from backend.connectors.teams_sync import sync_teams_items
@@ -73,6 +74,8 @@ async def automatic_sync_loop():
             )
 
         except Exception as e:
+
+            increment("sync_failures")
 
             print(
                 "[ContextFlow Scheduler] "
@@ -1127,6 +1130,23 @@ def sync_all():
 
 
 # ---------------------------------------------------------
+@app.get("/metrics")
+def metrics():
+    return get_metrics()
+
+
+@app.post("/metrics/notification")
+def record_notification():
+    increment("notifications_sent")
+    return get_metrics()
+
+
+@app.post("/metrics/completion")
+def record_completion():
+    increment("tasks_completed")
+    return get_metrics()
+
+
 # Dashboard
 # ---------------------------------------------------------
 
